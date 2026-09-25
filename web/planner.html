@@ -48,19 +48,37 @@
                 <a href="#" id="nav-wanderguide-link" data-i18n="nav_wanderguide">Where to Eat & Explore</a>
             </nav>
             <div class="mobile-portals-block">
-                <span class="mobile-portals-heading">Ecosystem Portals</span>
-                <a href="https://travelbuddy-police.vercel.app" target="_blank" rel="noopener noreferrer" class="portal-btn portal-btn-police" style="width:100%;justify-content:center;padding:10px;">
-                    <span>Open Police Portal</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                </a>
-                <a href="https://travelbuddy-hotel.vercel.app" target="_blank" rel="noopener noreferrer" class="portal-btn portal-btn-hotel" style="width:100%;justify-content:center;padding:10px;">
-                    <span>Open Hotel Portal</span>
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                </a>
-                <a href="https://github.com/anujks20/TravelBuddy/releases/download/v1.0.0/TravelBuddy-v1.0.0.apk" class="portal-btn portal-btn-apk" style="width:100%;justify-content:center;padding:10px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    <span>Download Android App</span>
-                </a>
+                <span class="mobile-portals-heading">TRAVELBUDDY ECOSYSTEM</span>
+                <div class="portal-card">
+                    <div class="portal-card-header">
+                        <span class="portal-card-icon">👮</span>
+                        <span class="portal-card-title">Police Command Center</span>
+                    </div>
+                    <p class="portal-card-desc">Monitor SOS alerts, incidents, tourists and IoT telemetry.</p>
+                    <a href="https://travelbuddy-police.vercel.app" target="_blank" rel="noopener noreferrer" class="portal-action-btn btn-police">
+                        Open Police Portal
+                    </a>
+                </div>
+                <div class="portal-card">
+                    <div class="portal-card-header">
+                        <span class="portal-card-icon">🏨</span>
+                        <span class="portal-card-title">Hotel Partner Portal</span>
+                    </div>
+                    <p class="portal-card-desc">Manage tourist verification, UID, stays and emergency information.</p>
+                    <a href="https://travelbuddy-hotel.vercel.app" target="_blank" rel="noopener noreferrer" class="portal-action-btn btn-hotel">
+                        Open Hotel Portal
+                    </a>
+                </div>
+                <div class="portal-card">
+                    <div class="portal-card-header">
+                        <span class="portal-card-icon">📱</span>
+                        <span class="portal-card-title">Android App</span>
+                    </div>
+                    <p class="portal-card-desc">Download the TravelBuddy Android application.</p>
+                    <a href="https://github.com/anujks20/TravelBuddy/releases/download/v1.0.0/TravelBuddy-v1.0.0.apk" class="portal-action-btn btn-apk">
+                        Download Android App
+                    </a>
+                </div>
             </div>
             <div class="mobile-drawer-footer">
                 <a href="index.html" class="btn btn-drawer-cta btn-outline" data-i18n="nav_back_home">Back to Home</a>
@@ -70,85 +88,62 @@
             <!-- TravelBuddy Ecosystem Portals Dropdown -->
             <div class="portals-container" id="portals-container">
                 <button class="portals-dropdown-btn" id="portals-dropdown-btn" type="button" aria-expanded="false" aria-haspopup="true">
-                    <svg class="portals-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
                     <span>Portals</span>
                     <svg class="portals-arrow" width="10" height="10" viewBox="0 0 12 12" fill="none">
-                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </button>
                 <div class="portals-dropdown-menu" id="portals-dropdown-menu" role="menu">
                     <div class="portals-menu-header">
-                        <span class="portals-header-title">TravelBuddy Ecosystem</span>
-                        <span class="portals-header-badge">SIH 2026</span>
+                        <span class="portals-header-title">TRAVELBUDDY ECOSYSTEM</span>
                     </div>
                     <div class="portals-menu-items">
                         <!-- Police Command Center -->
-                        <div class="portal-item">
-                            <div class="portal-item-icon portal-icon-police">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                        <div class="portal-card">
+                            <div class="portal-card-header">
+                                <span class="portal-card-icon">👮</span>
+                                <span class="portal-card-title">Police Command Center</span>
                             </div>
-                            <div class="portal-item-content">
-                                <div class="portal-item-title-row">
-                                    <span class="portal-item-title">Police Command Center</span>
-                                    <span class="portal-item-badge badge-police">Emergency</span>
-                                </div>
-                                <p class="portal-item-desc">Monitor SOS alerts, incidents, tourists and IoT safety telemetry.</p>
-                                <a href="https://travelbuddy-police.vercel.app" target="_blank" rel="noopener noreferrer" class="portal-btn portal-btn-police">
-                                    <span>Open Police Portal</span>
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                </a>
-                            </div>
+                            <p class="portal-card-desc">Monitor SOS alerts, incidents, tourists and IoT telemetry.</p>
+                            <a href="https://travelbuddy-police.vercel.app" target="_blank" rel="noopener noreferrer" class="portal-action-btn btn-police">
+                                Open Police Portal
+                            </a>
                         </div>
 
                         <!-- Hotel Partner Portal -->
-                        <div class="portal-item">
-                            <div class="portal-item-icon portal-icon-hotel">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"></path><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path><path d="M9 9h1"></path><path d="M9 13h1"></path><path d="M9 17h1"></path><path d="M14 9h1"></path><path d="M14 13h1"></path><path d="M14 17h1"></path></svg>
+                        <div class="portal-card">
+                            <div class="portal-card-header">
+                                <span class="portal-card-icon">🏨</span>
+                                <span class="portal-card-title">Hotel Partner Portal</span>
                             </div>
-                            <div class="portal-item-content">
-                                <div class="portal-item-title-row">
-                                    <span class="portal-item-title">Hotel Partner Portal</span>
-                                    <span class="portal-item-badge badge-hotel">Partners</span>
-                                </div>
-                                <p class="portal-item-desc">Manage tourist verification, UID, stays and emergency information.</p>
-                                <a href="https://travelbuddy-hotel.vercel.app" target="_blank" rel="noopener noreferrer" class="portal-btn portal-btn-hotel">
-                                    <span>Open Hotel Portal</span>
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                </a>
-                            </div>
+                            <p class="portal-card-desc">Manage tourist verification, UID, stays and emergency information.</p>
+                            <a href="https://travelbuddy-hotel.vercel.app" target="_blank" rel="noopener noreferrer" class="portal-action-btn btn-hotel">
+                                Open Hotel Portal
+                            </a>
                         </div>
 
                         <!-- Android App -->
-                        <div class="portal-item">
-                            <div class="portal-item-icon portal-icon-apk">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
+                        <div class="portal-card">
+                            <div class="portal-card-header">
+                                <span class="portal-card-icon">📱</span>
+                                <span class="portal-card-title">Android App</span>
                             </div>
-                            <div class="portal-item-content">
-                                <div class="portal-item-title-row">
-                                    <span class="portal-item-title">Android App</span>
-                                    <span class="portal-item-badge badge-apk">v1.0.0 APK</span>
-                                </div>
-                                <p class="portal-item-desc">Download the TravelBuddy Android application.</p>
-                                <div class="portal-actions-row">
-                                    <a href="https://github.com/anujks20/TravelBuddy/releases/download/v1.0.0/TravelBuddy-v1.0.0.apk" class="portal-btn portal-btn-apk">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                                        <span>Download Android App</span>
-                                    </a>
-                                    <a href="https://github.com/anujks20/TravelBuddy/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" class="portal-link-secondary">GitHub Release &rarr;</a>
-                                </div>
+                            <p class="portal-card-desc">Download the TravelBuddy Android application.</p>
+                            <a href="https://github.com/anujks20/TravelBuddy/releases/download/v1.0.0/TravelBuddy-v1.0.0.apk" class="portal-action-btn btn-apk">
+                                Download Android App
+                            </a>
+                            <div class="portal-sublink-row">
+                                <a href="https://github.com/anujks20/TravelBuddy/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer" class="portal-sublink">
+                                    GitHub Release v1.0.0 &rarr;
+                                </a>
                             </div>
                         </div>
                     </div>
                     <div class="portals-menu-footer">
-                        <span class="portals-creds-title">SIH Demo Credentials:</span>
-                        <div class="portals-creds-list">
-                            <span>Police: police@travelbuddy.com / police123</span>
-                            <span>Hotel: hotel@travelbuddy.com / hotel123</span>
+                        <span class="portals-creds-heading">Demo Credentials:</span>
+                        <div class="portals-creds-text">
+                            <span><strong>Police:</strong> police@travelbuddy.com / police123</span>
+                            <span><strong>Hotel:</strong> hotel@travelbuddy.com / hotel123</span>
                         </div>
                     </div>
                 </div>
