@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Buddy | Design Your Perfect Escape</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+    <!-- Background Video -->
+    <div class="video-container">
+        <video autoplay loop muted playsinline id="bg-video">
+            <source src="https://designerstephen.github.io/public-assets/videos/serene-art-hero.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <!-- Navigation -->
+    <header class="navbar">
+        <div class="nav-left">
+            <a href="#" class="brand">Travel Buddy<sup>&reg;</sup></a>
+        </div>
+        <div class="nav-center" id="nav-center-menu">
+            <div class="mobile-drawer-header">
+                <span class="mobile-drawer-title">Travel Buddy<sup>&reg;</sup></span>
+            </div>
+            <nav class="nav-links">
+                <a href="planner.html?view=explorer" data-i18n="nav_explorer">City Explorer</a>
+                <a href="planner.html?view=route-optimizer" data-i18n="nav_route_optimizer">Route &amp; Budget Optimizer</a>
+                <a href="planner.html" data-i18n="nav_planner">Trip Planner</a>
+                <a href="planner.html?view=safety" id="nav-safety-link" data-i18n="nav_safety">Safety Analysis</a>
+                <a href="planner.html?view=monitoring" id="nav-monitoring-link">
+                    <span class="nav-text-full" data-i18n="nav_monitoring_full">IoT Destination Monitor</span>
+                    <span class="nav-text-short" data-i18n="nav_monitoring_short">IoT Monitor</span>
+                </a>
+                <a href="planner.html?view=wanderguide" id="nav-guide-link" data-i18n="nav_wanderguide">Where to Eat & Explore</a>
+            </nav>
+            <div class="mobile-drawer-footer">
+                <a href="planner.html" class="btn btn-drawer-cta" data-i18n="nav_find_dream">Find my dream</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div id="lang-selector-container" class="lang-selector-container"></div>
+            <a href="planner.html" class="btn btn-small" data-i18n="nav_find_dream">Find my dream</a>
+            <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle navigation menu" type="button">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="mobile-nav-backdrop" id="mobile-nav-backdrop"></div>
+
+    <!-- Hero Section -->
+    <main class="hero-section">
+        <div class="hero-content">
+            <h1 class="stagger-1"><span data-i18n="hero_title">Design Your Perfect</span><br><em data-i18n="hero_title_em">Escape</em></h1>
+            <p class="stagger-2" data-i18n="hero_subtitle">Experience the world like never before with curated itineraries and exclusive access to the most breathtaking destinations on the planet.</p>
+            <a href="planner.html" class="btn btn-large stagger-3" data-i18n="hero_cta">Start Planning</a>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="i18n.js"></script><script src="auth.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+

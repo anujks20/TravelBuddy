@@ -1,0 +1,595 @@
+================================================================================
+          TRAVELBUDDY: COMPLETE MASTER SPECIFICATION & FEATURES GUIDE
+================================================================================
+Date: 2026-09-22
+Repository: TravelBuddy (Full-Stack Smart Tourism, Safety, Geofencing & IoT Ecosystem)
+Target: Comprehensive Point-to-Point Specification of All 6 Subsystems & Features
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+1. ECOSYSTEM ARCHITECTURE & SYSTEM OVERVIEW
+2. CENTRAL BACKEND API (EXPRESS / NODE.JS) - ALL 18 CONTROLLERS & ENDPOINTS
+3. POSTGRESQL DATABASE - ALL 15 TABLES, COLUMNS, CONSTRAINTS & RELATIONS
+4. GEOFENCING, RESTRICTED DANGER ZONES & PHONE WARNING SIREN SUBSYSTEM
+5. IOT WEARABLE SENSOR HARDWARE SUBSYSTEM (ESP32 + MPU6050 FIRMWARE)
+6. FLUTTER MOBILE APPLICATION - ALL SCREENS, SERVICES & LOCAL CAPABILITIES
+7. POLICE EMERGENCY COMMAND DASHBOARD (REACT 19 + VITE)
+8. HOTEL PARTNER PORTAL (REACT 19 + VITE)
+9. TOURIST WEB CLIENT - AI PLANNER, ROUTE OPTIMIZER & LEAFLET MAPS
+10. AI ENGINE (GROQ LLAMA-3) & OSRM TSP ROUTE OPTIMIZATION ALGORITHMS
+11. WHATSAPP BOT INTEGRATION (META CLOUD GRAPH API)
+12. NETWORK TOPOLOGY, ENVIRONMENT CONFIGURATIONS & PORTS MATRIX
+
+================================================================================
+1. ECOSYSTEM ARCHITECTURE & SYSTEM OVERVIEW
+================================================================================
+TravelBuddy is an enterprise-grade smart tourism and safety management platform 
+designed to protect tourists, automate trip planning, solve multi-stop travel 
+logistics, detect falls/impacts via wearable hardware, enforce geo-fenced danger 
+zones with audible sirens, and provide real-time coordination with Police Command 
+and Hotel Partners.
+
+The ecosystem connects 6 major subsystems:
+- Central Backend REST API (Node.js, Express, PostgreSQL with UUIDs & JSONB)
+- Flutter Mobile Application (Cross-Platform Android/iOS with Impeller engine)
+- Police Emergency Command Dashboard (React 19, Vite, Leaflet)
+- Hotel Partner Portal (React 19, Vite, Guest UID Verification)
+- Tourist Web Client (HTML5, Vanilla JS, AI Itinerary Planner & TSP Optimizer)
+- IoT Wearable Node (ESP32 Microcontroller + MPU-6050 6-Axis IMU Sensor)
+- WhatsApp Tourism Bot (Meta Cloud Graph API with webhook deduplication)
+
+================================================================================
+2. CENTRAL BACKEND API (EXPRESS / NODE.JS) - ALL CONTROLLERS & ENDPOINTS
+================================================================================
+Server Entry: backend/src/server.js
+Port: 5000 (Default: http://0.0.0.0:5000)
+Core Middleware:
+- helmet: Cross-Origin Resource Policy disabled for open media access.
+- express.json: 5MB payload limit for base64 media & complex itineraries.
+- express.urlencoded: 1MB payload limit for URL-encoded submissions.
+- express-rate-limit: Global limiter (300 requests per 15-minute window per IP).
+- cors: Dynamic origin whitelist with open access for mobile and dev clients.
+
+--------------------------------------------------------------------------------
+API Controller & Endpoint Reference:
+--------------------------------------------------------------------------------
+
+A. Authentication Controller (backend/src/controllers/authController.js)
+   - POST /api/auth/register
+     * Input: { email, password, full_name, phone_number, nationality, emergency_notes }
+     * Generates auto-formatted unique Tourist UID (e.g., TB-IND-2026-A1B2).
+     * Hashes password using bcrypt (10 rounds).
+     * Returns JWT bearer token + full user payload.
+   - POST /api/auth/login
+     * Input: { email, password }
+     * Validates credentials, updates last_login timestamp, issues JWT.
+   - GET /api/auth/me
+     * Input: Bearer JWT header.
+     * Returns current user identity, profile, and Tourist UID.
+
+B. Profile Controller (backend/src/controllers/profileController.js)
+   - GET /api/profile
+     * Retrieves tourist details, blood group, medical alerts, dietary notes.
+   - PUT /api/profile
+     * Updates tourist medical alerts, emergency contacts summary, nationality.
+
+C. Trip Controller (backend/src/controllers/tripController.js)
+   - GET /api/trips
+     * Retrieves all trips belonging to authenticated tourist.
+   - POST /api/trips
+     * Creates new trip with destination, start_date, end_date, total_budget, currency,
+       and complete JSONB itinerary tree (days, attractions, activities, costs).
+   - GET /api/trips/:id
+     * Returns granular itinerary details for a single trip.
+   - PUT /api/trips/:id
+     * Updates trip itinerary or status (PLANNED, ONGOING, COMPLETED).
+   - DELETE /api/trips/:id
+     * Deletes trip record and cascading assets.
+
+D. Hotel Stay Controller (backend/src/controllers/hotelStayController.js)
+   - GET /api/hotel-stays
+     * Returns all hotel stays for the logged-in tourist.
+   - POST /api/hotel-stays
+     * Creates booking/stay link with hotel_id, check_in_date, check_out_date, room_number.
+   - GET /api/hotel-stays/:id
+     * Fetches details, hotel address, contact phone, and amenities.
+
+E. Emergency Contact Controller (backend/src/controllers/emergencyContactController.js)
+   - GET /api/emergency-contacts
+     * Returns ordered list of emergency contacts (ranked by priority 1..5).
+   - POST /api/emergency-contacts
+     * Input: { contact_name, relationship, phone_number, email, priority_order }
+   - PUT /api/emergency-contacts/:id
+     * Updates contact details or priority ranking.
+   - DELETE /api/emergency-contacts/:id
+     * Removes contact from user profile.
+
+F. SOS Controller (backend/src/controllers/sosController.js)
+   - POST /api/sos/trigger
+     * Input: { latitude, longitude, altitude, battery_level, emergency_type, notes }
+     * Creates ACTIVE incident in `sos_incidents`.
+     * Logs initial trigger event in `sos_events`.
+     * Alerts police dashboard instantly.
+   - GET /api/sos/active
+     * Checks if current user has an ongoing active SOS incident.
+   - POST /api/sos/resolve
+     * Marks tourist incident as RESOLVED.
+
+G. Location Controller (backend/src/controllers/locationController.js)
+   - POST /api/locations/update
+     * Input: { latitude, longitude, altitude, speed, heading, accuracy }
+     * Inserts GPS breadcrumb into `locations` table.
+     * Evaluates location against all active restricted zones using Haversine algorithm.
+     * If breach occurs: records breach in `geofence_breaches` and returns { in_danger_zone: true, play_siren: true, zone: {...} }.
+
+H. Geofence Controller (backend/src/controllers/geofenceController.js)
+   - GET /api/geofence/zones
+     * Returns list of all active restricted danger sectors with center coordinates,
+       radius (meters), threat severity, and advisory messages.
+   - POST /api/geofence/check
+     * Explicitly calculates distance of a coordinate pair to all restricted zones.
+
+I. IoT Telemetry Controller (backend/src/controllers/iotController.js)
+   - POST /api/iot/telemetry
+     * Ingests ESP32 telemetry: { device_id, user_id, ax, ay, az, gx, gy, gz, total_accel, pitch, roll, is_fall_detected, latitude, longitude, battery_pct }.
+     * Automatically registers fall alarms if is_fall_detected is true or total_accel > 2.8g.
+     * Evaluates wearable GPS against geofences.
+     * Returns { success: true, geofence_breach: boolean, play_siren: boolean }.
+
+J. Police Auth & Dispatch Controllers (backend/src/controllers/policeAuthController.js, policeSosController.js, policeGeofenceController.js)
+   - POST /api/police/auth/login
+     * Authenticates police station / officer accounts.
+   - GET /api/police/sos/incidents
+     * Returns full feed of SOS emergencies with tourist medical info, phone, and GPS.
+   - PATCH /api/police/sos/incidents/:id/status
+     * Lifecycle transitions: ACTIVE -> ACKNOWLEDGED -> DISPATCHED -> RESOLVED.
+   - GET /api/police/geofence/breaches
+     * Live feed of active restricted zone violations with penetration distance and tracking source.
+   - PATCH /api/police/geofence/breaches/:id/acknowledge
+     * Officer acknowledges danger zone breach.
+   - PATCH /api/police/geofence/breaches/:id/resolve
+     * Closes breach incident after patrol verification.
+
+K. Hotel Portal Controller (backend/src/controllers/hotelAuthController.js, hotelPortalController.js)
+   - POST /api/hotel/auth/login
+     * Authenticates hotel partner staff.
+   - GET /api/hotel/guests/verify/:tourist_uid
+     * Looks up tourist by Unique UID, returning name, nationality, and medical notes.
+   - POST /api/hotel/checkin
+     * Digital check-in creating/updating `hotel_stays` record to CHECKED_IN.
+   - POST /api/hotel/checkout
+     * Checks guest out and marks status as CHECKED_OUT.
+   - GET /api/hotel/active-stays
+     * Live roster of all guests currently checked into the hotel.
+
+L. AI, Places & Route Optimization Controllers (backend/src/controllers/aiController.js, routeController.js, placeController.js)
+   - POST /api/ai/generate-itinerary
+     * Uses Groq Llama-3 API with prompt engineering to create day-by-day itineraries.
+   - POST /api/routes/optimize
+     * Solves Traveling Salesperson Problem (TSP) using OSRM distance matrix.
+   - POST /api/places/city
+     * Real-time Overpass API harvesting of tourist attractions and landmarks with dual queries, prominence scoring, and Wikipedia photo enrichment.
+   - GET /api/places/autocomplete
+     * High-speed debounced destination suggestions via OpenStreetMap Nominatim.
+   - POST /api/places/clear-cache & ALL /api/places/clear-cache
+     * Instant backend in-memory cache purge for all cities and places.
+   - GET /api/places/search & /api/places/nearby
+     * Queries OpenStreetMap / Nominatim / Overpass APIs for attractions and waypoints.
+
+M. WhatsApp Webhook Controller (backend/src/controllers/whatsappController.js)
+   - GET /api/whatsapp/webhook: Verifies Meta hub.challenge handshake token.
+   - POST /api/whatsapp/webhook: Parses inbound messages, enforces idempotency via `processed_messages`, triggers SOS or sends AI itinerary responses.
+
+================================================================================
+3. POSTGRESQL DATABASE - ALL 15 TABLES, COLUMNS & CONSTRAINTS
+================================================================================
+Primary Engine: PostgreSQL 15+
+Key Features: UUID Primary Keys (gen_random_uuid()), JSONB document storage, Foreign Key Cascades.
+
+Table 1: `users`
+- id (UUID, PK)
+- tourist_uid (VARCHAR(50), UNIQUE, NOT NULL) -- Format: TB-IND-2026-XXXX
+- email (VARCHAR(255), UNIQUE, NOT NULL)
+- password_hash (VARCHAR(255), NOT NULL)
+- full_name (VARCHAR(150), NOT NULL)
+- phone_number (VARCHAR(30))
+- nationality (VARCHAR(80))
+- blood_group (VARCHAR(10))
+- medical_conditions (TEXT)
+- emergency_notes (TEXT)
+- created_at, updated_at (TIMESTAMPTZ)
+
+Table 2: `emergency_contacts`
+- id (UUID, PK)
+- user_id (UUID, FK -> users(id) ON DELETE CASCADE)
+- contact_name (VARCHAR(150), NOT NULL)
+- relationship (VARCHAR(50))
+- phone_number (VARCHAR(30), NOT NULL)
+- email (VARCHAR(255))
+- priority_order (INT DEFAULT 1)
+- created_at, updated_at (TIMESTAMPTZ)
+
+Table 3: `trips`
+- id (UUID, PK)
+- user_id (UUID, FK -> users(id) ON DELETE CASCADE)
+- title (VARCHAR(200), NOT NULL)
+- destination (VARCHAR(200), NOT NULL)
+- start_date (DATE)
+- end_date (DATE)
+- budget_level (VARCHAR(50)) -- Budget, Moderate, Luxury
+- total_budget (NUMERIC(12,2))
+- currency (VARCHAR(10) DEFAULT 'INR')
+- itinerary_data (JSONB) -- Full structured days, activities, places, time slots
+- status (VARCHAR(50) DEFAULT 'PLANNED')
+- created_at, updated_at (TIMESTAMPTZ)
+
+Table 4: `hotels`
+- id (UUID, PK)
+- name (VARCHAR(200), NOT NULL)
+- address (TEXT NOT NULL)
+- latitude (DOUBLE PRECISION)
+- longitude (DOUBLE PRECISION)
+- phone_number (VARCHAR(30))
+- email (VARCHAR(255))
+- star_rating (INT DEFAULT 3)
+- is_verified (BOOLEAN DEFAULT TRUE)
+- created_at (TIMESTAMPTZ)
+
+Table 5: `hotel_stays`
+- id (UUID, PK)
+- user_id (UUID, FK -> users(id) ON DELETE CASCADE)
+- hotel_id (UUID, FK -> hotels(id) ON DELETE CASCADE)
+- room_number (VARCHAR(50))
+- check_in_date (TIMESTAMPTZ NOT NULL)
+- check_out_date (TIMESTAMPTZ)
+- stay_status (VARCHAR(50) DEFAULT 'RESERVED') -- RESERVED, CHECKED_IN, CHECKED_OUT
+- special_requests (TEXT)
+- created_at, updated_at (TIMESTAMPTZ)
+
+Table 6: `locations`
+- id (UUID, PK)
+- user_id (UUID, FK -> users(id) ON DELETE CASCADE)
+- latitude (DOUBLE PRECISION NOT NULL)
+- longitude (DOUBLE PRECISION NOT NULL)
+- altitude (DOUBLE PRECISION)
+- speed (DOUBLE PRECISION)
+- heading (DOUBLE PRECISION)
+- accuracy (DOUBLE PRECISION)
+- recorded_at (TIMESTAMPTZ DEFAULT NOW())
+
+Table 7: `sos_incidents`
+- id (UUID, PK)
+- user_id (UUID, FK -> users(id) ON DELETE CASCADE)
+- latitude (DOUBLE PRECISION NOT NULL)
+- longitude (DOUBLE PRECISION NOT NULL)
+- emergency_type (VARCHAR(50) DEFAULT 'GENERAL') -- GENERAL, MEDICAL, CRIME, ACCIDENT
+- status (VARCHAR(50) DEFAULT 'ACTIVE') -- ACTIVE, ACKNOWLEDGED, DISPATCHED, RESOLVED
+- battery_level (INT)
+- notes (TEXT)
+- triggered_at (TIMESTAMPTZ DEFAULT NOW())
+- resolved_at (TIMESTAMPTZ)
+
+Table 8: `sos_events`
+- id (UUID, PK)
+- incident_id (UUID, FK -> sos_incidents(id) ON DELETE CASCADE)
+- officer_id (UUID)
+- action_type (VARCHAR(100) NOT NULL) -- TRIGGERED, STATUS_CHANGE, DISPATCH, NOTE_ADDED
+- details (TEXT)
+- created_at (TIMESTAMPTZ DEFAULT NOW())
+
+Table 9: `restricted_zones`
+- id (UUID, PK)
+- zone_name (VARCHAR(150), NOT NULL)
+- description (TEXT)
+- latitude (DOUBLE PRECISION NOT NULL)
+- longitude (DOUBLE PRECISION NOT NULL)
+- radius_meters (DOUBLE PRECISION NOT NULL)
+- danger_level (VARCHAR(50) DEFAULT 'HIGH') -- LOW, MEDIUM, HIGH, CRITICAL
+- warning_message (TEXT NOT NULL)
+- is_active (BOOLEAN DEFAULT TRUE)
+- created_at (TIMESTAMPTZ)
+
+Table 10: `geofence_breaches`
+- id (UUID, PK)
+- user_id (UUID, FK -> users(id) ON DELETE CASCADE)
+- zone_id (UUID, FK -> restricted_zones(id) ON DELETE CASCADE)
+- user_lat (DOUBLE PRECISION NOT NULL)
+- user_lng (DOUBLE PRECISION NOT NULL)
+- distance_from_center (DOUBLE PRECISION NOT NULL)
+- penetration_meters (DOUBLE PRECISION NOT NULL)
+- tracking_source (VARCHAR(50) DEFAULT 'PHONE_GPS') -- PHONE_GPS, IOT_SENSOR_ESP32
+- status (VARCHAR(50) DEFAULT 'ACTIVE_BREACH') -- ACTIVE_BREACH, ACKNOWLEDGED, RESOLVED
+- breached_at (TIMESTAMPTZ DEFAULT NOW())
+- resolved_at (TIMESTAMPTZ)
+
+Table 11: `iot_telemetry`
+- id (UUID, PK)
+- device_id (VARCHAR(100) NOT NULL)
+- user_id (UUID, FK -> users(id) ON DELETE SET NULL)
+- ax, ay, az (DOUBLE PRECISION) -- Accelerometer components in g
+- gx, gy, gz (DOUBLE PRECISION) -- Gyroscope components in deg/s
+- total_accel (DOUBLE PRECISION) -- sqrt(ax^2 + ay^2 + az^2)
+- pitch (DOUBLE PRECISION) -- Degrees
+- roll (DOUBLE PRECISION) -- Degrees
+- is_fall_detected (BOOLEAN DEFAULT FALSE)
+- latitude (DOUBLE PRECISION)
+- longitude (DOUBLE PRECISION)
+- battery_pct (INT)
+- recorded_at (TIMESTAMPTZ DEFAULT NOW())
+
+Table 12: `police_users`
+- id (UUID, PK)
+- station_name (VARCHAR(200) NOT NULL)
+- badge_number (VARCHAR(50) UNIQUE NOT NULL)
+- officer_name (VARCHAR(150) NOT NULL)
+- email (VARCHAR(255) UNIQUE NOT NULL)
+- password_hash (VARCHAR(255) NOT NULL)
+- role (VARCHAR(50) DEFAULT 'OFFICER') -- OFFICER, DISPATCHER, COMMANDER
+- is_active (BOOLEAN DEFAULT TRUE)
+- created_at (TIMESTAMPTZ)
+
+Table 13: `hotel_users`
+- id (UUID, PK)
+- hotel_id (UUID, FK -> hotels(id) ON DELETE CASCADE)
+- employee_name (VARCHAR(150) NOT NULL)
+- email (VARCHAR(255) UNIQUE NOT NULL)
+- password_hash (VARCHAR(255) NOT NULL)
+- role (VARCHAR(50) DEFAULT 'STAFF') -- STAFF, MANAGER, ADMIN
+- created_at (TIMESTAMPTZ)
+
+Table 14: `audit_logs`
+- id (UUID, PK)
+- action (VARCHAR(100) NOT NULL)
+- entity_type (VARCHAR(50))
+- entity_id (VARCHAR(100))
+- actor_type (VARCHAR(50)) -- TOURIST, POLICE, HOTEL, SYSTEM
+- actor_id (VARCHAR(100))
+- ip_address (VARCHAR(50))
+- details (JSONB)
+- created_at (TIMESTAMPTZ DEFAULT NOW())
+
+Table 15: `processed_messages`
+- id (UUID, PK)
+- message_id (VARCHAR(255) UNIQUE NOT NULL) -- Meta WhatsApp message ID
+- sender_phone (VARCHAR(50) NOT NULL)
+- message_type (VARCHAR(50))
+- processed_at (TIMESTAMPTZ DEFAULT NOW())
+
+================================================================================
+4. GEOFENCING, RESTRICTED DANGER ZONES & PHONE SIREN SUBSYSTEM
+================================================================================
+A. Spherical Haversine Perimeter Math
+   Let (phi1, lambda1) = user GPS coordinate, (phi2, lambda2) = zone center coordinate.
+   dphi = (phi2 - phi1) in radians
+   dlambda = (lambda2 - lambda1) in radians
+   a = sin^2(dphi / 2) + cos(phi1) * cos(phi2) * sin^2(dlambda / 2)
+   c = 2 * atan2(sqrt(a), sqrt(1 - a))
+   distance = R * c (where R = 6,371,000 meters)
+
+   Breach Condition: distance <= zone.radius_meters
+   Penetration Depth = zone.radius_meters - distance
+
+B. Pre-configured Dangerous Sectors:
+   1. Ganga High-Current Rapids (Rishikesh): Lat 30.1312, Lng 78.3256, Radius: 450m [CRITICAL]
+   2. Neelkanth Cliffside Landslide Hazard: Lat 30.1589, Lng 78.3412, Radius: 600m [HIGH]
+   3. Military Perimeter Sector 7: Lat 30.1120, Lng 78.2910, Radius: 800m [RESTRICTED]
+   4. Bandra Coastal Tide Surge: Lat 19.0435, Lng 72.8195, Radius: 500m [HIGH]
+
+C. Phone Warning Siren & UI Alerting (mobile/lib/services/siren_service.dart)
+   - Implements synthesized dual-frequency emergency frequency loop (880Hz / 440Hz).
+   - Uses `audioplayers` with max stream volume on STREAM_ALARM channel.
+   - Displays full-screen red warning modal with danger zone title, severity badge,
+     and "Silence Siren & Acknowledge" button.
+   - Automatically synchronizes breach event to police threat feed.
+
+================================================================================
+5. IOT WEARABLE SENSOR HARDWARE SUBSYSTEM (ESP32 + MPU6050)
+================================================================================
+Hardware Platform: ESP32 Dev Module + MPU-6050 6-Axis Motion Tracking Sensor (I2C)
+Firmware File: iot/esp32_mpu6050_geofence_node.ino
+
+A. Sensor Sampling & Kinematic Vectors:
+   - Accelerometer: ax, ay, az (±2g range, 16384 LSB/g)
+   - Gyroscope: gx, gy, gz (±250°/s range, 131 LSB/(°/s))
+   - Total Acceleration Vector: A = sqrt(ax^2 + ay^2 + az^2)
+   - Pitch Angle: atan2(ay, sqrt(ax^2 + az^2)) * (180 / PI)
+   - Roll Angle: atan2(-ax, az) * (180 / PI)
+
+B. Anomaly & Fall Detection Algorithm:
+   - Free-fall Phase: A < 0.35g sustained for >= 150 milliseconds.
+   - Impact Phase: A > 2.80g sudden spike immediately following freefall.
+   - Posture Inactivity: User orientation remains static in tilted/lying plane.
+   - Immediate HTTP POST telemetry transmission to /api/iot/telemetry with is_fall_detected = true.
+
+C. Edge Hardware Warning:
+   - Onboard piezo buzzer on GPIO pin 23 emits 2.4kHz pulsed tones if backend returns
+     `{ geofence_breach: true, play_siren: true }` in HTTP response header/payload.
+
+================================================================================
+6. FLUTTER MOBILE APPLICATION - ALL SCREENS & SERVICES
+================================================================================
+Location: mobile/lib/
+Target: Android (API 24+) & iOS (14+) with Dart 3.x Null Safety & Impeller engine.
+
+A. Complete Screen Directory:
+   1. HomeScreen (home/home_screen.dart)
+      - Giant One-Touch SOS Emergency Button with hold-to-confirm prevention.
+      - Live Status Radar (Current Sector, Hotel Stay status, IoT Sync status).
+      - Quick Grid: AI Itinerary, Danger Map, IoT Sensor Monitor, Voice Translator.
+   2. LocationScreen (home/location_screen.dart)
+      - Live FlutterMap / OpenStreetMap vector rendering.
+      - Red circular translucent polygons rendering restricted danger zones.
+      - Real-time user GPS marker, heading indicator, and zone distance indicators.
+   3. IoTSensorScreen (home/iot_sensor_screen.dart)
+      - Real-time gauge meters for Ax, Ay, Az, Gx, Gy, Gz.
+      - Visual 3D Pitch and Roll horizon level indicator.
+      - Fall Detection Simulator with instant test trigger button.
+      - Connection status (Connected / Wi-Fi IP / Battery Level).
+   4. TripsScreen & TripDetailsScreen (home/trips_screen.dart, trip_details_screen.dart)
+      - Active trip timeline with expandable day-by-day itineraries.
+      - Activity timing, maps pin, budget breakdown, and note editing.
+   5. HotelStayScreen & HotelStayDetailsScreen (home/hotel_stay_screen.dart, hotel_stay_details_screen.dart)
+      - Digital Stay Pass with Tourist UID and QR Code.
+      - Check-in / Check-out timestamps, room numbers, hotel amenities, and call reception.
+   6. ProfileScreen (home/profile_screen.dart)
+      - Tourist Digital Identity Card with unique Tourist UID.
+      - Blood group, emergency medical alerts, nationality, and passport references.
+   7. EmergencyContactsScreen (home/emergency_contacts_screen.dart)
+      - Priority-ranked contacts CRUD with one-tap phone dialing and SMS trigger.
+   8. VoiceTranslatorScreen (home/voice_translator_screen.dart)
+      - Real-time Speech-To-Text (STT) using speech_to_text.
+      - On-device Neural Machine Translation using Google ML Kit.
+      - Text-To-Speech (TTS) vocalizer using flutter_tts.
+   9. AuthScreens (screens/auth/)
+      - Login, Registration, Password Reset, and secure biometric/token storage.
+
+B. Complete Service Directory:
+   - AuthService: Secure JWT token lifecycle with flutter_secure_storage.
+   - LocationService: High-accuracy GPS foreground service with geolocator.
+   - GeofenceService: Real-time background distance evaluation against danger zones.
+   - SirenService: Synthesized emergency audible warning generator.
+   - SosService: Emergency incident creation and live breadcrumb streaming.
+   - TripService: CRUD synchronization of AI itineraries.
+   - HotelStayService: Hotel reservation and digital stay sync.
+   - EmergencyContactService: Priority contact synchronization.
+   - VoiceTranslationService: Multilingual speech recognition and translation.
+   - AiService, RouteService, PlaceService: API clients for routing & AI.
+
+================================================================================
+7. POLICE EMERGENCY COMMAND DASHBOARD (REACT 19 + VITE)
+================================================================================
+Location: police-dashboard/
+Port: 5173 (http://localhost:5173)
+Technologies: React 19, Vite, Leaflet, React-Leaflet, CSS3 Dark Tactical Theme.
+
+Key Command Capabilities:
+1. Tactical Danger Radar:
+   - High-contrast interactive dark Leaflet map.
+   - Danger zones rendered in pulsating red circles with threat labels.
+   - Victim GPS markers with live accuracy radii and breadcrumb trails.
+2. Real-Time Geofence Violations Feed:
+   - Live banner alert when any tourist breaches a restricted sector.
+   - Detailed violation metrics: penetration distance, time inside zone, device source.
+   - Action buttons: "Acknowledge Breach" and "Dispatch Patrol & Clear".
+3. SOS Emergency Incident Manager:
+   - Incident cards ordered by severity and time.
+   - Displays victim photo, Tourist UID, blood group, medical alerts, and battery %.
+   - Full incident lifecycle workflow: ACTIVE -> ACKNOWLEDGED -> DISPATCHED -> RESOLVED.
+   - Immutable event history logger.
+4. IoT Wearable Telemetry Monitor:
+   - Live table of ESP32 sensor streams with Ax/Ay/Az, Pitch, Roll, and Fall alarms.
+
+================================================================================
+8. HOTEL PARTNER PORTAL (REACT 19 + VITE)
+================================================================================
+Location: hotel-portal/
+Port: 5174 (http://localhost:5174)
+Technologies: React 19, Vite, Modern Clean Hospitality Theme.
+
+Key Hotel Modules:
+1. Instant Tourist UID Verification:
+   - Direct search bar validating Tourist UIDs (e.g., TB-IND-2026-XXXX).
+   - Displays verified tourist photo, name, nationality, and emergency contacts.
+2. Digital Guest Check-in / Check-out Engine:
+   - Assigns room numbers and records check-in/out timestamps in PostgreSQL.
+   - Automatically synchronizes stay status to the tourist's mobile app.
+3. Active Guest Safety Roster:
+   - Live roster of all checked-in guests with emergency contact verification.
+4. Hotel Amenity & Safety Information Management:
+   - Hotel emergency exits, reception hotline, and guest services.
+
+================================================================================
+9. TOURIST WEB CLIENT - FULL SMART TOURISM SUITE
+================================================================================
+Location: web/
+Port: 3000 (http://localhost:3000)
+Technologies: HTML5, Vanilla ES6+ JavaScript, CSS3 Glassmorphism, Leaflet Maps.
+
+Key Web Modules:
+1. AI Trip Planner & Itinerary Visualizer:
+   - Interactive inputs: Origin, Destination, Travel Dates, Budget, Pace, Dietary, and Style.
+   - Generates and renders full day-by-day itineraries with costs and travel times.
+   - Built-in AI Trip Copilot assistant for conversational alterations.
+2. Budget & Multi-Stop Route Optimizer:
+   - Solves the Traveling Salesperson Problem (TSP) using OSRM distance matrices.
+   - Optimizes visiting sequence for multi-stop days to minimize travel cost and time.
+   - Fuel and travel mode cost calculator with interactive Leaflet polyline visualization.
+3. City Explorer (Live Destination & Landmark Intelligence Engine):
+   - Real-world Overpass API tourist landmark discovery across global cities.
+   - Prominence scoring algorithm ranking verified attractions above commercial clutter.
+   - Strict entity classification: automatically filters out private residences, fake venues, marriage gardens, municipal parks, and mismatched biographical portrait photos.
+   - Dynamic authentic photography resolution via Wikipedia / Wikimedia Commons with architectural fallbacks.
+   - Contextual photo provenance disclaimer for transparent attribution.
+   - Server-side and browser-side cache management with immediate cache-clear capabilities.
+4. Where to Eat & Explore (WanderGuide Dining & Cultural Discovery):
+   - Dedicated culinary directory for Cafes, Fine Dining, Street Food, and Hidden Cultural spots.
+   - Interactive split-screen Leaflet map and responsive card grid.
+   - Saved / Bookmarked places stored in persistent tourist storage.
+5. IoT Destination Monitor:
+   - Live ambient telemetry stream monitoring temperature, crowd density, air quality, and local weather.
+   - Real-time safety indicator badges for destination conditions.
+6. Interactive Danger Zone & Safety Analysis:
+   - Live destination risk index calculation.
+   - Highlights restricted sectors in translucent red circles with threat tooltips and advisories.
+7. Responsive Header & Navigation Architecture:
+   - Fluid responsive layout preventing text/logo overlap across all zoom scales (100%, 125%, 150%) and screen resolutions (1080p, 1366x768, 1440x900, 1536x864, 4K).
+   - Adaptive text shortening (`IoT Destination Monitor` -> `IoT Monitor`) and mobile drawer slide-out menu.
+8. Multilingual (i18n) Engine:
+   - Dynamic localization across 13 languages: English, Hindi, Marathi, Gujarati, Kannada, Tamil, Telugu, Bengali, French, German, Spanish, Italian, Japanese.
+9. Tourist Profile & Session Persistence:
+   - JWT authentication modal (Login/Register), header tourist profile pill, and secure logout.
+
+================================================================================
+10. AI ENGINE & ROUTE OPTIMIZATION ALGORITHMS
+================================================================================
+A. Groq Llama-3 Itinerary Generator:
+   - Endpoint: POST /api/ai/generate-itinerary
+   - Model: Llama-3-70b-versatile via Groq Cloud API.
+   - Strict JSON Schema output enforcing structured day objects, time slots,
+     coordinates, estimated costs in local currency, and local safety tips.
+
+B. OSRM Multi-Stop TSP Route Optimizer:
+   - Endpoint: POST /api/routes/optimize
+   - Computes distance/duration matrix across all selected waypoints.
+   - Executes Nearest-Neighbor with 2-Opt local search to find optimal visiting order.
+   - Computes estimated transit fuel / taxi costs.
+
+================================================================================
+11. WHATSAPP BOT INTEGRATION (META CLOUD GRAPH API)
+================================================================================
+Location: backend/src/controllers/whatsappController.js
+Webhook: POST /api/whatsapp/webhook
+
+Features:
+1. Meta Webhook Handshake: Verifies hub.verify_token and hub.challenge.
+2. Idempotency Protection: Uses `processed_messages` table to prevent duplicate responses.
+3. Conversational Commands:
+   - "SOS" or "Help": Triggers emergency alert and returns safety instructions.
+   - "Itinerary": Retrieves current active trip summary for the registered phone number.
+   - "Attractions": Queries nearby attractions using GPS location pin sent in WhatsApp.
+
+================================================================================
+12. NETWORK TOPOLOGY, ENVIRONMENT CONFIGURATIONS & PORTS
+================================================================================
+Subsystem Port Matrix:
+- Backend REST API:           Port 5000 (http://localhost:5000)
+- Tourist Web Portal:         Port 3000 (http://localhost:3000)
+- Police Command Dashboard:   Port 5173 (http://localhost:5173)
+- Hotel Partner Portal:       Port 5174 (http://localhost:5174)
+- Android Emulator:           emulator-5554 (API 37)
+
+Environment Variables:
+- Backend (.env):
+  PORT=5000
+  NODE_ENV=development
+  DATABASE_URL=postgresql://postgres:password@localhost:5432/travelbuddy
+  JWT_SECRET=your_jwt_secret_key
+  GROQ_API_KEY=gsk_...
+  WHATSAPP_TOKEN=EAAB...
+  WHATSAPP_VERIFY_TOKEN=travelbuddy_verify_token
+  CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:5174
+
+================================================================================
+EOF - TravelBuddy Master Specification Document
+================================================================================

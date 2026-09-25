@@ -1,0 +1,8 @@
+{
+  "terminal.integrated.env.windows": {
+    "PYTHONIOENCODING": "utf-8",
+    "PYTHONUTF8": "1"
+  },
+  "platformio-ide.customPATH": "C:\\Users\\rikki\\.platformio\\penv\\Scripts",
+  "platformio-ide.useBuiltinPython": true
+}

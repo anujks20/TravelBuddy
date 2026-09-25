@@ -1,0 +1,144 @@
+================================================================================
+                    TRAVELBUDDY MASTER PROJECT REPORT & ARCHITECTURE
+================================================================================
+Updated: 2026-09-21
+Repository: TravelBuddy (Full-Stack Smart Tourism, Safety, Geofencing & IoT Ecosystem)
+Status: Complete Implementation & Active Integration
+
+================================================================================
+1. EXECUTIVE SUMMARY & ECOSYSTEM OVERVIEW
+================================================================================
+TravelBuddy is an end-to-end smart tourism, safety, and travel management platform 
+designed to protect tourists, streamline itinerary planning, optimize travel budgets 
+and routes, enforce geo-fencing restricted danger perimeters, and provide instant emergency 
+coordination with police, hotel partners, and IoT wearable nodes.
+
+The ecosystem comprises 6 interconnected components powered by a unified Node.js/PostgreSQL backend:
+
+1. Backend API, Geofencing & IoT Engine:
+   - Central RESTful API (Node.js, Express, PostgreSQL with UUIDs/JSONB)
+   - Real-time Geo-Fencing Radar (Haversine perimeter evaluation, breach logging)
+   - IoT Telemetry Ingestion for ESP32 + MPU6050 IMU sensors (fall/impact detection)
+   - Groq AI Itinerary Generator & Prompt Engineering Engine
+   - OSRM / OpenStreetMap Routing & TSP Multi-Stop Optimization Engine
+   - Real-time SOS Emergency Dispatch & GPS Breadcrumb Tracking
+   - WhatsApp Bot Integration via Meta Cloud Graph API
+   - Multi-role Authentication (Tourists, Police Officers, Hotel Staff)
+
+2. Web Client (Traveler Portal):
+   - Interactive AI Trip Planner & Day-by-Day Visualizer
+   - Budget & Multi-Stop Route Optimizer with Interactive Leaflet Maps
+   - Red Danger Zone Overlays for Restricted Tourist Sectors
+   - Tourist Authentication, Profile & Tourist UID Management
+   - Multi-language i18n support & deep-linking capabilities
+
+3. Mobile Application (Flutter):
+   - Cross-platform Android/iOS application built with Flutter & Dart
+   - Dedicated IoT Wearable Sensor Screen (ESP32 + MPU6050 Live Telemetry & Testing Modes)
+   - Interactive Location Map with Red Circular Danger Zone Overlays & Tooltips
+   - Geo-Fencing Danger Monitor: Automatically plays audible Warning Siren on phone breach
+   - Instant One-Touch SOS Emergency Trigger with Live GPS coordinates
+   - Full Trip & AI Itinerary Management
+   - Hotel Stay Verification & Digital Check-in
+   - Tourist Digital Identity Card with unique Tourist UID
+   - Emergency Contacts CRUD Management
+
+4. Police Emergency Command Dashboard:
+   - Real-time React 19 + Vite emergency response monitoring command center
+   - Live Threat Map with red restricted danger circles and victim GPS markers
+   - Real-time Geofence Violations Feed with active breach warning banners
+   - Live IoT Wearable Sensor Telemetry (MPU6050 Accel/Gyro metrics, fall alarms)
+   - Incident lifecycle workflow (Active -> Acknowledged -> Dispatched -> Resolved)
+   - Tourist identity, nationality, medical/contact details, and audit history
+
+5. Hotel Partner Portal:
+   - Dedicated React + Vite portal for partner hotels and hospitality staff
+   - Guest verification using Tourist UID or booking reference numbers
+   - Active stay management, room allocations, check-ins, and check-outs
+   - Hotel amenity, safety, and occupancy dashboard
+
+6. IoT Wearable Sensor Node (ESP32 + MPU6050):
+   - Microcontroller firmware for ESP32 with MPU-6050 6-DOF motion sensor
+   - Free-fall and high-G impact anomaly detection algorithm
+   - Periodic Wi-Fi HTTP telemetry transmission to `/api/iot/telemetry`
+   - Onboard audible buzzer warning if danger zone is breached
+
+================================================================================
+2. GEO-FENCING, RESTRICTED ZONES & PHONE SIREN SUBSYSTEM
+================================================================================
+
+A. Restricted Danger Zone Engine (`/api/geofence`)
+   - Pre-configured & customizable restricted sectors (e.g., Ganga High-Current Rapids, Neelkanth Cliffside Landslide Hazard, Military Perimeter Sector 7, Bandra Coastal Tide Surge).
+   - High-precision spherical Haversine distance calculator measuring user distance from zone epicenter in meters.
+   - Real-time breach detection triggered automatically upon phone location updates or IoT sensor telemetry.
+
+B. Phone Warning Siren & User Alerts
+   - Mobile (Flutter):
+     * When entering any danger zone, `GeofenceService` instantly triggers `SirenService.start()`, playing an synthesized audible warning siren loop.
+     * Full-screen urgent Red Alert Modal appears with danger zone details, threat severity, and a "Dismiss & Silence Siren" button.
+   - Web Client:
+     * Highlights danger zones in bold red circles on interactive Leaflet maps with threat popups.
+
+C. Police Dashboard Threat Radar
+   - Live pulsating red warning banner appears across the dashboard when any tourist enters a restricted zone.
+   - Dedicated "Geofence Violations & IoT" monitoring tab.
+   - Displays tourist details, breach duration, penetration distance, and tracking source (`PHONE_GPS` or `IOT_SENSOR_ESP32`).
+   - One-click "Acknowledge Breach" and "Dispatch Patrol & Clear" workflows.
+
+================================================================================
+3. IOT WEARABLE HARDWARE SUBSYSTEM (ESP32 + MPU6050)
+================================================================================
+
+A. Motion & Fall Detection Architecture
+   - Accelerometer ($a_x, a_y, a_z$) sampled at $\pm 2g$ scale.
+   - Gyroscope ($g_x, g_y, g_z$) sampled at $\pm 250^\circ/\text{s}$ scale.
+   - Total acceleration vector $A = \sqrt{a_x^2 + a_y^2 + a_z^2}$.
+   - Freefall detection ($A < 0.35g$) and violent crash/impact detection ($A > 2.8g$).
+   - Pitch and Roll angle estimation using complementary trigonometric filters.
+
+B. Telemetry Ingestion API (`POST /api/iot/telemetry`)
+   - Ingests device ID, user ID, 6-DOF motion vectors, GPS lat/lng, and battery levels.
+   - Cross-evaluates location against active danger zones and returns `{ geofence_breach: true, play_siren: true }`.
+   - Complete Arduino C++ sketch provided in `iot/esp32_mpu6050_geofence_node.ino`.
+
+================================================================================
+4. DATABASE SCHEMA & DATA MIGRATIONS
+================================================================================
+
+The database is built on PostgreSQL with UUID primary keys and JSONB document storage.
+
+Tables Implemented:
+1. `users`: Tourist profiles, tourist_uid, contact details, hashed credentials.
+2. `emergency_contacts`: Priority-ordered emergency contacts linked to users.
+3. `trips`: User travel itineraries with JSONB metadata.
+4. `hotels`: Partner hotels, contact info, and verification status.
+5. `hotel_stays`: Tourist check-in/out records linked to hotels.
+6. `locations`: High-precision GPS breadcrumbs and tracking history.
+7. `sos_incidents`: Emergency SOS incidents, status, GPS coordinates, and notes.
+8. `sos_events`: Complete audit trail of emergency events and dispatches.
+9. `restricted_zones`: Geographic danger zones with coordinates, radius, and danger levels.
+10. `geofence_breaches`: Real-time and historical restricted zone violation records.
+11. `iot_telemetry`: Raw and calibrated motion/GPS data from ESP32 + MPU6050 nodes.
+12. `police_users`: Police officers and station dispatch accounts.
+13. `hotel_users`: Partner hotel staff accounts.
+14. `audit_logs`: Administrative security and system audit logs.
+15. `processed_messages`: WhatsApp idempotency message deduplication store.
+
+================================================================================
+5. SUMMARY MATRIX OF ALL COMPONENTS
+================================================================================
+
+| Component        | Technology           | Status      | Key Capabilities                                  |
+|------------------|----------------------|-------------|---------------------------------------------------|
+| Backend API      | Node.js / Express    | Complete    | REST endpoints, Geofence Radar, IoT Ingestion, AI |
+| Database         | PostgreSQL           | Complete    | 15 tables, UUIDs, JSONB, migrations, indexing     |
+| Web Client       | HTML5 / Vanilla JS   | Complete    | AI Trip Planner, Red Danger Circles, Route Engine |
+| Mobile App       | Flutter / Dart       | Complete    | Warning Siren on Breach, SOS Button, Trips, Stays |
+| Police Dashboard | React 19 / Vite      | Complete    | Live Danger Radar, IoT MPU6050 Metrics, SOS Map   |
+| Hotel Portal     | React / Vite         | Complete    | Guest UID check-in, Active stay roster, Amenities |
+| WhatsApp Bot     | Meta Cloud API       | Complete    | Interactive chatbot, Itinerary query, SOS trigger |
+| IoT Node         | ESP32 / C++ Arduino  | Complete    | MPU6050 IMU, Fall Detection, HTTP Telemetry      |
+
+================================================================================
+EOF - TravelBuddy Master Project Documentation
+================================================================================

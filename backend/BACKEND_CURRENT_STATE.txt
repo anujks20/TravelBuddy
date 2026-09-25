@@ -1,0 +1,2546 @@
+﻿
+==================== C:\Users\rikki\TravelBuddy\backend\src\server.js ====================
+
+const express = require("express");
+const cors = require("cors");
+require("dotenv").config();
+
+const authRoutes = require("./routes/authRoutes");
+const profileRoutes = require("./routes/profileRoutes");
+const tripRoutes = require("./routes/tripRoutes");
+const hotelStayRoutes = require("./routes/hotelStayRoutes");
+const emergencyContactRoutes = require("./routes/emergencyContactRoutes");
+const sosRoutes = require("./routes/sosRoutes");
+const locationRoutes = require("./routes/locationRoutes");
+const policeAuthRoutes = require("./routes/policeAuthRoutes");
+const policeSosRoutes = require("./routes/policeSosRoutes");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json({ limit: "5mb" }));
+
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "TravelBuddy Backend is running!"
+  });
+});
+
+app.get("/api/health", (req, res) => {
+  res.json({
+    success: true,
+    message: "TravelBuddy API is healthy.",
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.use("/api/auth", authRoutes);
+app.use("/api/profile", profileRoutes);
+app.use("/api/trips", tripRoutes);
+app.use("/api/hotel-stays", hotelStayRoutes);
+app.use("/api/emergency-contacts", emergencyContactRoutes);
+app.use("/api/sos", sosRoutes);
+app.use("/api/locations", locationRoutes);
+
+app.use("/api/police/auth", policeAuthRoutes);
+app.use("/api/police/sos", policeSosRoutes);
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(
+    `TravelBuddy backend running on http://localhost:${PORT}`
+  );
+});
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\config\db.js ====================
+
+const { Pool } = require("pg");
+require("dotenv").config();
+
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD
+});
+
+module.exports = pool;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\config\initDb.js ====================
+
+const fs = require("fs");
+const path = require("path");
+const pool = require("./db");
+
+async function initializeDatabase() {
+  try {
+    const schemaPath = path.join(__dirname, "schema.sql");
+    const schema = fs.readFileSync(schemaPath, "utf8");
+
+    await pool.query(schema);
+
+    console.log("TravelBuddy database initialized successfully.");
+  } catch (error) {
+    console.error("Database initialization failed:", error.message);
+    process.exitCode = 1;
+  } finally {
+    await pool.end();
+  }
+}
+
+initializeDatabase();
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\config\schema.sql ====================
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tourist_uid VARCHAR(20) UNIQUE NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    phone VARCHAR(20) UNIQUE,
+    password_hash TEXT NOT NULL,
+    language VARCHAR(20) DEFAULT 'English',
+    nationality_code VARCHAR(3),
+    profile_photo_url TEXT,
+    identity_type VARCHAR(20),
+    identity_verified BOOLEAN DEFAULT FALSE,
+    role VARCHAR(20) DEFAULT 'TOURIST',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE emergency_contacts (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    relationship VARCHAR(50),
+    priority INTEGER DEFAULT 1,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE trips (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    title VARCHAR(150) NOT NULL,
+    destination VARCHAR(150),
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status VARCHAR(30) DEFAULT 'PLANNED',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE hotels (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(150) NOT NULL,
+    address TEXT,
+    city VARCHAR(100),
+    state VARCHAR(100),
+    country VARCHAR(100) DEFAULT 'India',
+    phone VARCHAR(20),
+    partner_status BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE hotel_stays (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    hotel_id UUID NOT NULL REFERENCES hotels(id),
+    trip_id UUID REFERENCES trips(id) ON DELETE SET NULL,
+    booking_reference VARCHAR(100),
+    check_in TIMESTAMPTZ NOT NULL,
+    check_out TIMESTAMPTZ,
+    status VARCHAR(30) DEFAULT 'ACTIVE',
+    source VARCHAR(30) DEFAULT 'MANUAL',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE locations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    latitude DECIMAL(10, 7) NOT NULL,
+    longitude DECIMAL(10, 7) NOT NULL,
+    accuracy DECIMAL(10, 2),
+    speed DECIMAL(10, 2),
+    heading DECIMAL(10, 2),
+    recorded_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sos_incidents (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sos_reference VARCHAR(30) UNIQUE NOT NULL,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(30) NOT NULL,
+    status VARCHAR(30) DEFAULT 'ACTIVE',
+    latitude DECIMAL(10, 7),
+    longitude DECIMAL(10, 7),
+    location_accuracy DECIMAL(10, 2),
+    trigger_source VARCHAR(30) NOT NULL,
+    message TEXT,
+    acknowledged_at TIMESTAMPTZ,
+    resolved_at TIMESTAMPTZ,
+    resolved_by UUID,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE sos_events (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    sos_incident_id UUID NOT NULL REFERENCES sos_incidents(id) ON DELETE CASCADE,
+    event_type VARCHAR(50) NOT NULL,
+    actor_type VARCHAR(30),
+    actor_id UUID,
+    metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE police_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role VARCHAR(30) DEFAULT 'OFFICER',
+    station VARCHAR(150),
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE hotel_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    hotel_id UUID NOT NULL REFERENCES hotels(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role VARCHAR(30) DEFAULT 'STAFF',
+    active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    actor_type VARCHAR(30) NOT NULL,
+    actor_id UUID,
+    action VARCHAR(100) NOT NULL,
+    target_type VARCHAR(50),
+    target_id UUID,
+    ip_address INET,
+    metadata JSONB,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_tourist_uid ON users(tourist_uid);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_sos_status ON sos_incidents(status);
+CREATE INDEX idx_locations_user_id ON locations(user_id);
+CREATE INDEX idx_hotel_stays_user_id ON hotel_stays(user_id);
+CREATE INDEX idx_sos_user_id ON sos_incidents(user_id);
+CREATE INDEX idx_sos_created_at ON sos_incidents(created_at);
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\controllers\authController.js ====================
+
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
+const { generateTouristUid } = require("../services/uidService");
+
+function createToken(user) {
+  return jwt.sign(
+    {
+      userId: user.id,
+      role: user.role
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRES_IN || "7d"
+    }
+  );
+}
+
+async function register(req, res) {
+  try {
+    const {
+      fullName,
+      email,
+      phone,
+      password,
+      language,
+      nationalityCode,
+      identityType,
+      identityNumber
+    } = req.body;
+
+    if (
+      !fullName ||
+      !email ||
+      !password ||
+      !nationalityCode ||
+      !identityType ||
+      !identityNumber
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Full name, email, password, nationality, identity type and identity number are required."
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedNationality = nationalityCode.trim().toUpperCase();
+    const normalizedIdentityType = identityType.trim().toUpperCase();
+    const normalizedIdentityNumber = identityNumber.trim().toUpperCase();
+
+    if (!/^[A-Z]{3}$/.test(normalizedNationality)) {
+      return res.status(400).json({
+        success: false,
+        message: "Nationality code must be exactly 3 letters."
+      });
+    }
+
+    if (!["AADHAAR", "PASSPORT"].includes(normalizedIdentityType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Identity type must be AADHAAR or PASSPORT."
+      });
+    }
+
+    if (normalizedIdentityNumber.length < 4) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid identity number."
+      });
+    }
+
+    const existingUser = await pool.query(
+      "SELECT id FROM users WHERE email = $1",
+      [normalizedEmail]
+    );
+
+    if (existingUser.rows.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: "An account with this email already exists."
+      });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    /*
+     * PostgreSQL generates the UUID first.
+     * We then derive the Tourist UID from:
+     *
+     * TB-NATIONALITY-IDENTITY4-RANDOM4
+     */
+    const userIdResult = await pool.query(
+      "SELECT uuid_generate_v4() AS id"
+    );
+
+    const userId = userIdResult.rows[0].id;
+
+    let touristUid;
+    let uidExists = true;
+
+    while (uidExists) {
+      touristUid = generateTouristUid(
+        normalizedNationality,
+        normalizedIdentityNumber
+      );
+
+      const uidResult = await pool.query(
+        "SELECT id FROM users WHERE tourist_uid = $1",
+        [touristUid]
+      );
+
+      uidExists = uidResult.rows.length > 0;
+    }
+
+    const result = await pool.query(
+      `INSERT INTO users
+        (
+          id,
+          tourist_uid,
+          full_name,
+          email,
+          phone,
+          password_hash,
+          language,
+          nationality_code,
+          identity_type,
+          identity_verified,
+          role
+        )
+       VALUES
+        (
+          $1,
+          $2,
+          $3,
+          $4,
+          $5,
+          $6,
+          $7,
+          $8,
+          $9,
+          FALSE,
+          'TOURIST'
+        )
+       RETURNING
+        id,
+        tourist_uid,
+        full_name,
+        email,
+        phone,
+        language,
+        nationality_code,
+        identity_verified,
+        role,
+        created_at`,
+      [
+        userId,
+        touristUid,
+        fullName.trim(),
+        normalizedEmail,
+        phone || null,
+        passwordHash,
+        language || "English",
+        normalizedNationality,
+        normalizedIdentityType
+      ]
+    );
+
+    const user = result.rows[0];
+    const token = createToken(user);
+
+    return res.status(201).json({
+      success: true,
+      message: "TravelBuddy account created successfully.",
+      token,
+      user
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to create account."
+    });
+  }
+}
+
+async function login(req, res) {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required."
+      });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const result = await pool.query(
+      "SELECT * FROM users WHERE email = $1",
+      [normalizedEmail]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password."
+      });
+    }
+
+    const user = result.rows[0];
+
+    const passwordValid = await bcrypt.compare(
+      password,
+      user.password_hash
+    );
+
+    if (!passwordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password."
+      });
+    }
+
+    const token = createToken(user);
+
+    delete user.password_hash;
+
+    return res.json({
+      success: true,
+      message: "Login successful.",
+      token,
+      user
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to login."
+    });
+  }
+}
+
+async function me(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT
+        id,
+        tourist_uid,
+        full_name,
+        email,
+        phone,
+        language,
+        nationality_code,
+        profile_photo_url,
+        identity_type,
+        identity_verified,
+        role,
+        created_at,
+        updated_at
+       FROM users
+       WHERE id = $1`,
+      [req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found."
+      });
+    }
+
+    return res.json({
+      success: true,
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Me error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch user profile."
+    });
+  }
+}
+
+function logout(req, res) {
+  return res.json({
+    success: true,
+    message: "Logout successful. Remove the stored token from the client."
+  });
+}
+
+module.exports = {
+  register,
+  login,
+  me,
+  logout
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\controllers\emergencyContactController.js ====================
+
+const pool = require("../config/db");
+
+async function addEmergencyContact(req, res) {
+  try {
+    const {
+      name,
+      phone,
+      relationship,
+      priority
+    } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and phone are required."
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO emergency_contacts
+        (
+          user_id,
+          name,
+          phone,
+          relationship,
+          priority
+        )
+       VALUES
+        ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        req.user.id,
+        name.trim(),
+        phone.trim(),
+        relationship ? relationship.trim() : null,
+        priority || 1
+      ]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Emergency contact added successfully.",
+      contact: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Add emergency contact error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to add emergency contact."
+    });
+  }
+}
+
+async function getEmergencyContacts(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT *
+       FROM emergency_contacts
+       WHERE user_id = $1
+       ORDER BY priority ASC, created_at ASC`,
+      [req.user.id]
+    );
+
+    return res.json({
+      success: true,
+      contacts: result.rows
+    });
+  } catch (error) {
+    console.error("Get emergency contacts error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch emergency contacts."
+    });
+  }
+}
+
+module.exports = {
+  addEmergencyContact,
+  getEmergencyContacts
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\controllers\hotelStayController.js ====================
+
+const pool = require("../config/db");
+
+async function createHotelStay(req, res) {
+  try {
+    const {
+      hotelId,
+      tripId,
+      bookingReference,
+      checkIn,
+      checkOut,
+      source
+    } = req.body;
+
+    if (!hotelId || !checkIn) {
+      return res.status(400).json({
+        success: false,
+        message: "Hotel ID and check-in time are required."
+      });
+    }
+
+    const hotelResult = await pool.query(
+      "SELECT id FROM hotels WHERE id = $1",
+      [hotelId]
+    );
+
+    if (hotelResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Hotel not found."
+      });
+    }
+
+    if (tripId) {
+      const tripResult = await pool.query(
+        "SELECT id FROM trips WHERE id = $1 AND user_id = $2",
+        [tripId, req.user.id]
+      );
+
+      if (tripResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Trip not found for this user."
+        });
+      }
+    }
+
+    const result = await pool.query(
+      `INSERT INTO hotel_stays
+        (
+          user_id,
+          hotel_id,
+          trip_id,
+          booking_reference,
+          check_in,
+          check_out,
+          source
+        )
+       VALUES
+        ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [
+        req.user.id,
+        hotelId,
+        tripId || null,
+        bookingReference || null,
+        checkIn,
+        checkOut || null,
+        source || "MANUAL"
+      ]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Hotel stay linked successfully.",
+      hotelStay: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Create hotel stay error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to create hotel stay."
+    });
+  }
+}
+
+async function getMyHotelStays(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT
+        hs.*,
+        h.name AS hotel_name,
+        h.address AS hotel_address,
+        h.city AS hotel_city,
+        h.state AS hotel_state,
+        h.country AS hotel_country,
+        h.phone AS hotel_phone,
+        h.partner_status
+      FROM hotel_stays hs
+      JOIN hotels h ON h.id = hs.hotel_id
+      WHERE hs.user_id = $1
+      ORDER BY hs.check_in DESC`,
+      [req.user.id]
+    );
+
+    return res.json({
+      success: true,
+      hotelStays: result.rows
+    });
+  } catch (error) {
+    console.error("Get hotel stays error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch hotel stays."
+    });
+  }
+}
+
+module.exports = {
+  createHotelStay,
+  getMyHotelStays
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\controllers\locationController.js ====================
+
+const pool = require("../config/db");
+
+async function updateLocation(req, res) {
+  try {
+    const {
+      latitude,
+      longitude,
+      accuracy,
+      speed,
+      heading
+    } = req.body;
+
+    if (latitude === undefined || longitude === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Latitude and longitude are required."
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO locations
+        (
+          user_id,
+          latitude,
+          longitude,
+          accuracy,
+          speed,
+          heading
+        )
+       VALUES
+        ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        req.user.id,
+        latitude,
+        longitude,
+        accuracy ?? null,
+        speed ?? null,
+        heading ?? null
+      ]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Location updated successfully.",
+      location: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Update location error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to update location."
+    });
+  }
+}
+
+async function getLatestLocation(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT *
+       FROM locations
+       WHERE user_id = $1
+       ORDER BY recorded_at DESC
+       LIMIT 1`,
+      [req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No location data available."
+      });
+    }
+
+    return res.json({
+      success: true,
+      location: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Get latest location error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch latest location."
+    });
+  }
+}
+
+module.exports = {
+  updateLocation,
+  getLatestLocation
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\controllers\policeAuthController.js ====================
+
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
+
+function createPoliceToken(policeUser) {
+  return jwt.sign(
+    {
+      policeUserId: policeUser.id,
+      role: "POLICE"
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRES_IN || "7d"
+    }
+  );
+}
+
+async function loginPolice(req, res) {
+  try {
+    const {
+      email,
+      password
+    } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required."
+      });
+    }
+
+    const normalizedEmail = email
+      .trim()
+      .toLowerCase();
+
+    const result = await pool.query(
+      `SELECT *
+       FROM police_users
+       WHERE email = $1`,
+      [normalizedEmail]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid police email or password."
+      });
+    }
+
+    const policeUser = result.rows[0];
+
+    if (!policeUser.active) {
+      return res.status(403).json({
+        success: false,
+        message: "Police account is inactive."
+      });
+    }
+
+    const passwordValid = await bcrypt.compare(
+      password,
+      policeUser.password_hash
+    );
+
+    if (!passwordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid police email or password."
+      });
+    }
+
+    const token = createPoliceToken(policeUser);
+
+    return res.json({
+      success: true,
+      message: "Police login successful.",
+      token,
+      policeUser: {
+        id: policeUser.id,
+        name: policeUser.name,
+        email: policeUser.email,
+        role: policeUser.role,
+        station: policeUser.station,
+        active: policeUser.active
+      }
+    });
+  } catch (error) {
+    console.error("Police login error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to login police user."
+    });
+  }
+}
+
+async function getPoliceProfile(req, res) {
+  return res.json({
+    success: true,
+    policeUser: req.policeUser
+  });
+}
+
+module.exports = {
+  loginPolice,
+  getPoliceProfile
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\controllers\policeSosController.js ====================
+
+const pool = require("../config/db");
+
+async function getActiveSos(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT
+        s.id,
+        s.sos_reference,
+        s.type,
+        s.status,
+        s.latitude,
+        s.longitude,
+        s.location_accuracy,
+        s.trigger_source,
+        s.message,
+        s.acknowledged_at,
+        s.resolved_at,
+        s.created_at,
+
+        u.tourist_uid,
+        u.full_name,
+        u.phone,
+        u.email,
+        u.nationality_code,
+
+        latest_location.latitude AS latest_latitude,
+        latest_location.longitude AS latest_longitude,
+        latest_location.accuracy AS latest_accuracy,
+        latest_location.recorded_at AS latest_location_time,
+
+        trip.id AS trip_id,
+        trip.title AS trip_title,
+        trip.destination AS trip_destination,
+        trip.start_date AS trip_start_date,
+        trip.end_date AS trip_end_date,
+
+        hotel.id AS hotel_id,
+        hotel.name AS hotel_name,
+        hotel.address AS hotel_address,
+        hotel.city AS hotel_city,
+        hotel.state AS hotel_state,
+
+        ec.name AS emergency_contact_name,
+        ec.phone AS emergency_contact_phone,
+        ec.relationship AS emergency_contact_relationship
+
+      FROM sos_incidents s
+
+      JOIN users u
+        ON u.id = s.user_id
+
+      LEFT JOIN LATERAL (
+        SELECT
+          latitude,
+          longitude,
+          accuracy,
+          recorded_at
+        FROM locations
+        WHERE user_id = s.user_id
+        ORDER BY recorded_at DESC
+        LIMIT 1
+      ) latest_location ON TRUE
+
+      LEFT JOIN LATERAL (
+        SELECT
+          t.id,
+          t.title,
+          t.destination,
+          t.start_date,
+          t.end_date
+        FROM trips t
+        WHERE t.user_id = s.user_id
+        ORDER BY t.created_at DESC
+        LIMIT 1
+      ) trip ON TRUE
+
+      LEFT JOIN LATERAL (
+        SELECT
+          h.id,
+          h.name,
+          h.address,
+          h.city,
+          h.state
+        FROM hotel_stays hs
+        JOIN hotels h
+          ON h.id = hs.hotel_id
+        WHERE hs.user_id = s.user_id
+          AND hs.status = 'ACTIVE'
+        ORDER BY hs.check_in DESC
+        LIMIT 1
+      ) hotel ON TRUE
+
+      LEFT JOIN LATERAL (
+        SELECT
+          name,
+          phone,
+          relationship
+        FROM emergency_contacts
+        WHERE user_id = s.user_id
+        ORDER BY priority ASC, created_at ASC
+        LIMIT 1
+      ) ec ON TRUE
+
+      WHERE s.status IN ('ACTIVE', 'ACKNOWLEDGED')
+      ORDER BY s.created_at DESC`
+    );
+
+    return res.json({
+      success: true,
+      sosIncidents: result.rows
+    });
+  } catch (error) {
+    console.error("Get active SOS error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch active SOS incidents."
+    });
+  }
+}
+
+async function getSosDetails(req, res) {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `SELECT
+        s.*,
+        u.tourist_uid,
+        u.full_name,
+        u.email,
+        u.phone,
+        u.nationality_code,
+        u.language,
+        u.identity_type,
+        u.identity_verified
+      FROM sos_incidents s
+      JOIN users u
+        ON u.id = s.user_id
+      WHERE s.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "SOS incident not found."
+      });
+    }
+
+    const incident = result.rows[0];
+
+    const contactsResult = await pool.query(
+      `SELECT
+        id,
+        name,
+        phone,
+        relationship,
+        priority
+       FROM emergency_contacts
+       WHERE user_id = $1
+       ORDER BY priority ASC, created_at ASC`,
+      [incident.user_id]
+    );
+
+    const eventsResult = await pool.query(
+      `SELECT
+        id,
+        event_type,
+        actor_type,
+        actor_id,
+        metadata,
+        created_at
+       FROM sos_events
+       WHERE sos_incident_id = $1
+       ORDER BY created_at ASC`,
+      [incident.id]
+    );
+
+    return res.json({
+      success: true,
+      sos: incident,
+      emergencyContacts: contactsResult.rows,
+      events: eventsResult.rows
+    });
+  } catch (error) {
+    console.error("Get SOS details error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch SOS details."
+    });
+  }
+}
+
+async function acknowledgeSos(req, res) {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `UPDATE sos_incidents
+       SET
+         status = 'ACKNOWLEDGED',
+         acknowledged_at = CURRENT_TIMESTAMP
+       WHERE id = $1
+         AND status = 'ACTIVE'
+       RETURNING *`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Active SOS incident not found."
+      });
+    }
+
+    const incident = result.rows[0];
+
+    await pool.query(
+      `INSERT INTO sos_events
+        (
+          sos_incident_id,
+          event_type,
+          actor_type,
+          actor_id,
+          metadata
+        )
+       VALUES
+        ($1, 'SOS_ACKNOWLEDGED', 'POLICE', $2, $3)`,
+      [
+        incident.id,
+        req.policeUser.id,
+        JSON.stringify({
+          station: req.policeUser.station,
+          policeRole: req.policeUser.role
+        })
+      ]
+    );
+
+    await pool.query(
+      `INSERT INTO audit_logs
+        (
+          actor_type,
+          actor_id,
+          action,
+          target_type,
+          target_id,
+          metadata
+        )
+       VALUES
+        (
+          'POLICE',
+          $1,
+          'ACKNOWLEDGE_SOS',
+          'SOS_INCIDENT',
+          $2,
+          $3
+        )`,
+      [
+        req.policeUser.id,
+        incident.id,
+        JSON.stringify({
+          sosReference: incident.sos_reference,
+          station: req.policeUser.station
+        })
+      ]
+    );
+
+    return res.json({
+      success: true,
+      message: "SOS acknowledged successfully.",
+      sos: incident
+    });
+  } catch (error) {
+    console.error("Acknowledge SOS error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to acknowledge SOS."
+    });
+  }
+}
+
+async function resolveSos(req, res) {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `UPDATE sos_incidents
+       SET
+         status = 'RESOLVED',
+         resolved_at = CURRENT_TIMESTAMP,
+         resolved_by = $1
+       WHERE id = $2
+         AND status IN ('ACTIVE', 'ACKNOWLEDGED')
+       RETURNING *`,
+      [req.policeUser.id, id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Active SOS incident not found."
+      });
+    }
+
+    const incident = result.rows[0];
+
+    await pool.query(
+      `INSERT INTO sos_events
+        (
+          sos_incident_id,
+          event_type,
+          actor_type,
+          actor_id,
+          metadata
+        )
+       VALUES
+        ($1, 'SOS_RESOLVED', 'POLICE', $2, $3)`,
+      [
+        incident.id,
+        req.policeUser.id,
+        JSON.stringify({
+          station: req.policeUser.station,
+          policeRole: req.policeUser.role
+        })
+      ]
+    );
+
+    await pool.query(
+      `INSERT INTO audit_logs
+        (
+          actor_type,
+          actor_id,
+          action,
+          target_type,
+          target_id,
+          metadata
+        )
+       VALUES
+        (
+          'POLICE',
+          $1,
+          'RESOLVE_SOS',
+          'SOS_INCIDENT',
+          $2,
+          $3
+        )`,
+      [
+        req.policeUser.id,
+        incident.id,
+        JSON.stringify({
+          sosReference: incident.sos_reference,
+          station: req.policeUser.station
+        })
+      ]
+    );
+
+    return res.json({
+      success: true,
+      message: "SOS resolved successfully.",
+      sos: incident
+    });
+  } catch (error) {
+    console.error("Resolve SOS error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to resolve SOS."
+    });
+  }
+}
+
+module.exports = {
+  getActiveSos,
+  getSosDetails,
+  acknowledgeSos,
+  resolveSos
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\controllers\profileController.js ====================
+
+const pool = require("../config/db");
+
+async function getProfile(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT
+        id,
+        tourist_uid,
+        full_name,
+        email,
+        phone,
+        language,
+        nationality_code,
+        profile_photo_url,
+        identity_type,
+        identity_verified,
+        role,
+        created_at,
+        updated_at
+      FROM users
+      WHERE id = $1`,
+      [req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User profile not found."
+      });
+    }
+
+    return res.json({
+      success: true,
+      user: result.rows[0]
+    });
+  } catch (error) {
+    console.error("Get profile error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch profile."
+    });
+  }
+}
+
+module.exports = {
+  getProfile
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\controllers\sosController.js ====================
+
+const crypto = require("crypto");
+const pool = require("../config/db");
+const { prepareSosAlerts } = require("../services/sosAlertService");
+
+function generateSosReference() {
+  const randomPart = crypto
+    .randomBytes(4)
+    .toString("hex")
+    .toUpperCase();
+
+  return `SOS-${randomPart}`;
+}
+
+async function createSos(req, res) {
+  try {
+    const {
+      type,
+      latitude,
+      longitude,
+      locationAccuracy,
+      triggerSource,
+      message
+    } = req.body;
+
+    if (!type || !triggerSource) {
+      return res.status(400).json({
+        success: false,
+        message: "SOS type and trigger source are required."
+      });
+    }
+
+    const allowedTypes = [
+      "MEDICAL",
+      "POLICE",
+      "FIRE",
+      "ACCIDENT",
+      "GENERAL"
+    ];
+
+    const normalizedType = type.trim().toUpperCase();
+    const normalizedTriggerSource = triggerSource.trim().toUpperCase();
+
+    if (!allowedTypes.includes(normalizedType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid SOS type."
+      });
+    }
+
+    const sosReference = generateSosReference();
+
+    // Get the tourist's most recently stored location.
+    const latestLocationResult = await pool.query(
+      `SELECT
+        latitude,
+        longitude,
+        accuracy
+       FROM locations
+       WHERE user_id = $1
+       ORDER BY recorded_at DESC
+       LIMIT 1`,
+      [req.user.id]
+    );
+
+    const latestLocation = latestLocationResult.rows[0] || null;
+
+    // Use coordinates supplied with the SOS when available.
+    // Otherwise use the tourist's latest stored location.
+    const finalLatitude =
+      latitude !== undefined
+        ? latitude
+        : latestLocation
+          ? latestLocation.latitude
+          : null;
+
+    const finalLongitude =
+      longitude !== undefined
+        ? longitude
+        : latestLocation
+          ? latestLocation.longitude
+          : null;
+
+    const finalAccuracy =
+      locationAccuracy !== undefined
+        ? locationAccuracy
+        : latestLocation
+          ? latestLocation.accuracy
+          : null;
+
+    // Create the main SOS incident.
+    const result = await pool.query(
+      `INSERT INTO sos_incidents
+        (
+          sos_reference,
+          user_id,
+          type,
+          status,
+          latitude,
+          longitude,
+          location_accuracy,
+          trigger_source,
+          message
+        )
+       VALUES
+        ($1, $2, $3, 'ACTIVE', $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        sosReference,
+        req.user.id,
+        normalizedType,
+        finalLatitude,
+        finalLongitude,
+        finalAccuracy,
+        normalizedTriggerSource,
+        message ? message.trim() : null
+      ]
+    );
+
+    const incident = result.rows[0];
+
+    // Record the SOS creation event.
+    await pool.query(
+      `INSERT INTO sos_events
+        (
+          sos_incident_id,
+          event_type,
+          actor_type,
+          actor_id,
+          metadata
+        )
+       VALUES
+        ($1, 'SOS_CREATED', 'TOURIST', $2, $3)`,
+      [
+        incident.id,
+        req.user.id,
+        JSON.stringify({
+          triggerSource: normalizedTriggerSource,
+          locationSource:
+            latitude !== undefined && longitude !== undefined
+              ? "SOS_REQUEST"
+              : latestLocation
+                ? "LATEST_STORED_LOCATION"
+                : "UNAVAILABLE"
+        })
+      ]
+    );
+
+    // Prepare alerts for the tourist, emergency contacts,
+    // and police dashboard.
+    const alerts = await prepareSosAlerts(
+      req.user.id,
+      incident
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "SOS activated successfully.",
+      sos: incident,
+      alerts
+    });
+  } catch (error) {
+    console.error("Create SOS error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to activate SOS."
+    });
+  }
+}
+
+async function getMySos(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT *
+       FROM sos_incidents
+       WHERE user_id = $1
+       ORDER BY created_at DESC`,
+      [req.user.id]
+    );
+
+    return res.json({
+      success: true,
+      sosIncidents: result.rows
+    });
+  } catch (error) {
+    console.error("Get SOS history error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to fetch SOS history."
+    });
+  }
+}
+
+module.exports = {
+  createSos,
+  getMySos
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\controllers\tripController.js ====================
+
+const pool = require("../config/db");
+
+function normalizeJsonValue(value, fallback = null) {
+  if (value === undefined || value === null) {
+    return fallback;
+  }
+
+  if (typeof value !== "string") {
+    return value;
+  }
+
+  let parsed = value;
+
+  for (let i = 0; i < 3; i++) {
+    if (typeof parsed !== "string") {
+      return parsed;
+    }
+
+    try {
+      parsed = JSON.parse(parsed);
+    } catch (error) {
+      return value;
+    }
+  }
+
+  return parsed;
+}
+
+async function createTrip(req, res) {
+  try {
+    const {
+      title,
+      destination,
+      startDate,
+      endDate,
+      status,
+      plannerMetadata,
+      metadata,
+      itinerary
+    } = req.body;
+
+    if (!title || !startDate || !endDate) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Title, start date and end date are required."
+      });
+    }
+
+    const finalPlannerMetadata =
+      normalizeJsonValue(
+        plannerMetadata !== undefined
+          ? plannerMetadata
+          : metadata,
+        null
+      );
+
+    const finalItinerary =
+      normalizeJsonValue(itinerary, null);
+
+    if (
+      finalItinerary !== null &&
+      !Array.isArray(finalItinerary) &&
+      typeof finalItinerary !== "object"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid itinerary format."
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO trips
+        (
+          user_id,
+          title,
+          destination,
+          start_date,
+          end_date,
+          status,
+          planner_metadata,
+          itinerary
+        )
+       VALUES
+        ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        req.user.id,
+        title.trim(),
+        destination
+          ? destination.trim()
+          : null,
+        startDate,
+        endDate,
+        status || "PLANNED",
+        JSON.stringify(finalPlannerMetadata),
+        JSON.stringify(finalItinerary)
+      ]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message:
+        "Trip created successfully.",
+      trip: result.rows[0]
+    });
+  } catch (error) {
+    console.error(
+      "Create trip error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Unable to create trip."
+    });
+  }
+}
+
+async function getMyTrips(req, res) {
+  try {
+    const result = await pool.query(
+      `SELECT *
+       FROM trips
+       WHERE user_id = $1
+       ORDER BY start_date DESC, created_at DESC`,
+      [req.user.id]
+    );
+
+    return res.json({
+      success: true,
+      trips: result.rows
+    });
+  } catch (error) {
+    console.error(
+      "Get trips error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Unable to fetch trips."
+    });
+  }
+}
+
+async function getTripById(req, res) {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `SELECT *
+       FROM trips
+       WHERE id = $1
+         AND user_id = $2
+       LIMIT 1`,
+      [id, req.user.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found."
+      });
+    }
+
+    return res.json({
+      success: true,
+      trip: result.rows[0]
+    });
+  } catch (error) {
+    console.error(
+      "Get trip by ID error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Unable to fetch trip."
+    });
+  }
+}
+
+async function updateTrip(req, res) {
+  try {
+    const { id } = req.params;
+
+    const {
+      title,
+      destination,
+      startDate,
+      endDate,
+      status,
+      plannerMetadata,
+      metadata,
+      itinerary
+    } = req.body;
+
+    const finalPlannerMetadata =
+      plannerMetadata !== undefined
+        ? normalizeJsonValue(
+            plannerMetadata,
+            null
+          )
+        : metadata !== undefined
+          ? normalizeJsonValue(
+              metadata,
+              null
+            )
+          : undefined;
+
+    const finalItinerary =
+      itinerary !== undefined
+        ? normalizeJsonValue(
+            itinerary,
+            null
+          )
+        : undefined;
+
+    const result = await pool.query(
+      `UPDATE trips
+       SET
+         title = COALESCE($1, title),
+         destination = COALESCE($2, destination),
+         start_date = COALESCE($3, start_date),
+         end_date = COALESCE($4, end_date),
+         status = COALESCE($5, status),
+         planner_metadata = COALESCE($6, planner_metadata),
+         itinerary = COALESCE($7, itinerary),
+         updated_at = CURRENT_TIMESTAMP
+       WHERE id = $8
+         AND user_id = $9
+       RETURNING *`,
+      [
+        title !== undefined
+          ? title.trim()
+          : null,
+
+        destination !== undefined
+          ? destination
+            ? destination.trim()
+            : null
+          : null,
+
+        startDate || null,
+        endDate || null,
+        status || null,
+
+        finalPlannerMetadata !== undefined
+          ? JSON.stringify(finalPlannerMetadata)
+          : null,
+
+        finalItinerary !== undefined
+          ? JSON.stringify(finalItinerary)
+          : null,
+
+        id,
+        req.user.id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found."
+      });
+    }
+
+    return res.json({
+      success: true,
+      message:
+        "Trip updated successfully.",
+      trip: result.rows[0]
+    });
+  } catch (error) {
+    console.error(
+      "Update trip error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Unable to update trip."
+    });
+  }
+}
+
+module.exports = {
+  createTrip,
+  getMyTrips,
+  getTripById,
+  updateTrip
+};
+
+
+
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\middleware\authMiddleware.js ====================
+
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
+
+async function authenticate(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required."
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const result = await pool.query(
+      `SELECT
+        id,
+        tourist_uid,
+        full_name,
+        email,
+        phone,
+        language,
+        profile_photo_url,
+        identity_type,
+        identity_verified,
+        role,
+        created_at,
+        updated_at
+       FROM users
+       WHERE id = $1`,
+      [decoded.userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "User account not found."
+      });
+    }
+
+    req.user = result.rows[0];
+
+    next();
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Authentication token has expired."
+      });
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid authentication token."
+      });
+    }
+
+    console.error("Authentication error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Authentication failed."
+    });
+  }
+}
+
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to access this resource."
+      });
+    }
+
+    next();
+  };
+}
+
+module.exports = {
+  authenticate,
+  requireRole
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\middleware\policeAuthMiddleware.js ====================
+
+const jwt = require("jsonwebtoken");
+const pool = require("../config/db");
+
+async function authenticatePolice(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        success: false,
+        message: "Police authentication required."
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
+
+    if (!decoded.policeUserId || decoded.role !== "POLICE") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid police authentication token."
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT
+        id,
+        name,
+        email,
+        role,
+        station,
+        active,
+        created_at
+       FROM police_users
+       WHERE id = $1`,
+      [decoded.policeUserId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Police account not found."
+      });
+    }
+
+    const policeUser = result.rows[0];
+
+    if (!policeUser.active) {
+      return res.status(403).json({
+        success: false,
+        message: "Police account is inactive."
+      });
+    }
+
+    req.policeUser = policeUser;
+
+    next();
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Police authentication token has expired."
+      });
+    }
+
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid police authentication token."
+      });
+    }
+
+    console.error("Police authentication error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Police authentication failed."
+    });
+  }
+}
+
+function requirePoliceRole(...roles) {
+  return (req, res, next) => {
+    if (
+      !req.policeUser ||
+      !roles.includes(req.policeUser.role)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "You do not have permission to perform this action."
+      });
+    }
+
+    next();
+  };
+}
+
+module.exports = {
+  authenticatePolice,
+  requirePoliceRole
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\routes\authRoutes.js ====================
+
+const express = require("express");
+
+const {
+  register,
+  login,
+  me,
+  logout
+} = require("../controllers/authController");
+
+const {
+  authenticate
+} = require("../middleware/authMiddleware");
+
+const router = express.Router();
+
+router.post("/register", register);
+router.post("/login", login);
+
+router.get("/me", authenticate, me);
+
+router.post("/logout", authenticate, logout);
+
+module.exports = router;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\routes\emergencyContactRoutes.js ====================
+
+const express = require("express");
+
+const {
+  addEmergencyContact,
+  getEmergencyContacts
+} = require("../controllers/emergencyContactController");
+
+const {
+  authenticate
+} = require("../middleware/authMiddleware");
+
+const router = express.Router();
+
+router.post("/", authenticate, addEmergencyContact);
+router.get("/", authenticate, getEmergencyContacts);
+
+module.exports = router;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\routes\hotelStayRoutes.js ====================
+
+const express = require("express");
+
+const {
+  createHotelStay,
+  getMyHotelStays
+} = require("../controllers/hotelStayController");
+
+const {
+  authenticate
+} = require("../middleware/authMiddleware");
+
+const router = express.Router();
+
+router.post("/", authenticate, createHotelStay);
+router.get("/", authenticate, getMyHotelStays);
+
+module.exports = router;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\routes\locationRoutes.js ====================
+
+const express = require("express");
+
+const {
+  updateLocation,
+  getLatestLocation
+} = require("../controllers/locationController");
+
+const {
+  authenticate
+} = require("../middleware/authMiddleware");
+
+const router = express.Router();
+
+router.post("/", authenticate, updateLocation);
+router.get("/latest", authenticate, getLatestLocation);
+
+module.exports = router;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\routes\policeAuthRoutes.js ====================
+
+const express = require("express");
+
+const {
+  loginPolice,
+  getPoliceProfile
+} = require("../controllers/policeAuthController");
+
+const {
+  authenticatePolice
+} = require("../middleware/policeAuthMiddleware");
+
+const router = express.Router();
+
+router.post("/login", loginPolice);
+router.get("/me", authenticatePolice, getPoliceProfile);
+
+module.exports = router;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\routes\policeSosRoutes.js ====================
+
+const express = require("express");
+
+const {
+  getActiveSos,
+  getSosDetails,
+  acknowledgeSos,
+  resolveSos
+} = require("../controllers/policeSosController");
+
+const {
+  authenticatePolice
+} = require("../middleware/policeAuthMiddleware");
+
+const router = express.Router();
+
+router.get(
+  "/active",
+  authenticatePolice,
+  getActiveSos
+);
+
+router.get(
+  "/:id",
+  authenticatePolice,
+  getSosDetails
+);
+
+router.post(
+  "/:id/acknowledge",
+  authenticatePolice,
+  acknowledgeSos
+);
+
+router.post(
+  "/:id/resolve",
+  authenticatePolice,
+  resolveSos
+);
+
+module.exports = router;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\routes\profileRoutes.js ====================
+
+const express = require("express");
+
+const { getProfile } = require("../controllers/profileController");
+const { authenticate } = require("../middleware/authMiddleware");
+
+const router = express.Router();
+
+router.get("/", authenticate, getProfile);
+
+module.exports = router;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\routes\sosRoutes.js ====================
+
+const express = require("express");
+
+const {
+  createSos,
+  getMySos
+} = require("../controllers/sosController");
+
+const {
+  authenticate
+} = require("../middleware/authMiddleware");
+
+const router = express.Router();
+
+router.post("/", authenticate, createSos);
+router.get("/", authenticate, getMySos);
+
+module.exports = router;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\routes\tripRoutes.js ====================
+
+const express = require("express");
+
+const {
+  createTrip,
+  getMyTrips,
+  getTripById,
+  updateTrip
+} = require("../controllers/tripController");
+
+const {
+  authenticate
+} = require("../middleware/authMiddleware");
+
+const router = express.Router();
+
+// Create a trip
+router.post("/", authenticate, createTrip);
+
+// Get all trips belonging to the logged-in tourist
+router.get("/", authenticate, getMyTrips);
+
+// Get one trip belonging to the logged-in tourist
+router.get("/:id", authenticate, getTripById);
+
+// Update one trip belonging to the logged-in tourist
+router.patch("/:id", authenticate, updateTrip);
+
+module.exports = router;
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\services\smsService.js ====================
+
+async function sendSms({
+  to,
+  message,
+  sosReference
+}) {
+  if (!to || !message) {
+    return {
+      success: false,
+      status: "FAILED",
+      reason: "Recipient phone number and message are required."
+    };
+  }
+
+  console.log("");
+  console.log("========================================");
+  console.log("        TRAVELBUDDY MOCK SMS");
+  console.log("========================================");
+  console.log(`To: ${to}`);
+  console.log(`SOS Reference: ${sosReference}`);
+  console.log("Message:");
+  console.log(message);
+  console.log("========================================");
+  console.log("");
+
+  return {
+    success: true,
+    status: "MOCK_SENT",
+    provider: "MOCK_SMS",
+    recipient: to,
+    sosReference
+  };
+}
+
+module.exports = {
+  sendSms
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\services\sosAlertService.js ====================
+
+const pool = require("../config/db");
+const { sendSms } = require("./smsService");
+
+async function prepareSosAlerts(userId, incident) {
+  const userResult = await pool.query(
+    `SELECT
+      full_name,
+      tourist_uid,
+      phone
+     FROM users
+     WHERE id = $1
+     LIMIT 1`,
+    [userId]
+  );
+
+  const user = userResult.rows[0];
+
+  if (!user) {
+    throw new Error("Tourist account not found.");
+  }
+
+  const contactsResult = await pool.query(
+    `SELECT
+      id,
+      name,
+      phone,
+      relationship,
+      priority
+     FROM emergency_contacts
+     WHERE user_id = $1
+     ORDER BY priority ASC, created_at ASC`,
+    [userId]
+  );
+
+  const emergencyContacts = contactsResult.rows;
+
+  const locationText =
+    incident.latitude !== null &&
+    incident.longitude !== null
+      ? `${incident.latitude}, ${incident.longitude}`
+      : "Location unavailable";
+
+  const smsMessage =
+    `TravelBuddy EMERGENCY ALERT: ${user.full_name} ` +
+    `(${user.tourist_uid}) has activated an SOS. ` +
+    `SOS Reference: ${incident.sos_reference}. ` +
+    `Location: ${locationText}.`;
+
+  const emergencyContactAlerts = [];
+
+  for (const contact of emergencyContacts) {
+    const smsResult = await sendSms({
+      to: contact.phone,
+      message: smsMessage,
+      sosReference: incident.sos_reference
+    });
+
+    emergencyContactAlerts.push({
+      contactId: contact.id,
+      name: contact.name,
+      phone: contact.phone,
+      relationship: contact.relationship,
+      priority: contact.priority,
+      push: {
+        required: true,
+        status: "PENDING"
+      },
+      sms: {
+        required: true,
+        status: smsResult.status,
+        provider: smsResult.provider || null,
+        message: smsMessage
+      }
+    });
+
+    await pool.query(
+      `INSERT INTO sos_events
+        (
+          sos_incident_id,
+          event_type,
+          actor_type,
+          actor_id,
+          metadata
+        )
+       VALUES
+        ($1, 'SMS_ALERT_ATTEMPTED', 'SYSTEM', NULL, $2)`,
+      [
+        incident.id,
+        JSON.stringify({
+          contactId: contact.id,
+          phone: contact.phone,
+          status: smsResult.status,
+          provider: smsResult.provider || "MOCK_SMS"
+        })
+      ]
+    );
+  }
+
+  const alerts = {
+    tourist: {
+      siren: {
+        required: true,
+        status: "TRIGGER_LOCAL_APP"
+      }
+    },
+
+    emergencyContacts: emergencyContactAlerts,
+
+    police: {
+      required: true,
+      status: "AVAILABLE_IN_ACTIVE_SOS_FEED",
+      sosReference: incident.sos_reference
+    }
+  };
+
+  await pool.query(
+    `INSERT INTO sos_events
+      (
+        sos_incident_id,
+        event_type,
+        actor_type,
+        actor_id,
+        metadata
+      )
+     VALUES
+      ($1, 'ALERTS_PREPARED', 'SYSTEM', NULL, $2)`,
+    [
+      incident.id,
+      JSON.stringify({
+        emergencyContactCount:
+          emergencyContacts.length,
+        smsAlertCount:
+          emergencyContactAlerts.length,
+        policeAlert: true,
+        touristSiren: true
+      })
+    ]
+  );
+
+  return alerts;
+}
+
+module.exports = {
+  prepareSosAlerts
+};
+
+==================== C:\Users\rikki\TravelBuddy\backend\src\services\uidService.js ====================
+
+const crypto = require("crypto");
+
+function normalizeNationality(code) {
+  return code.trim().toUpperCase().slice(0, 3);
+}
+
+function deriveIdentityPart(identityNumber) {
+  const normalized = identityNumber.trim().toUpperCase();
+
+  const hash = crypto
+    .createHash("sha256")
+    .update(normalized)
+    .digest("hex")
+    .toUpperCase();
+
+  return hash.slice(0, 4);
+}
+
+function generateRandomPart() {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.randomBytes(4);
+
+  let result = "";
+
+  for (let i = 0; i < 4; i++) {
+    result += characters[bytes[i] % characters.length];
+  }
+
+  return result;
+}
+
+function generateTouristUid(nationalityCode, identityNumber) {
+  const nationality = normalizeNationality(nationalityCode);
+  const identityPart = deriveIdentityPart(identityNumber);
+  const randomPart = generateRandomPart();
+
+  return `TB-${nationality}-${identityPart}-${randomPart}`;
+}
+
+module.exports = {
+  generateTouristUid
+};

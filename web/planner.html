@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trip Planner | TRAVELX</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Instrument+Serif&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css?v=3">
+    <link rel="stylesheet" href="planner.css">
+    <link rel="stylesheet" href="css/budgetRouteOptimizer.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+</head>
+
+<body class="planner-body">
+    <div class="video-container">
+        <video autoplay loop muted playsinline id="bg-video">
+            <source src="india_tourism_slow_0.7x_gwr_video_mvp.mp4" type="video/mp4">
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+    <!-- Navigation -->
+    <header class="navbar planner-nav">
+        <div class="nav-left">
+            <a href="index.html" class="brand">Travel Buddy<sup>&reg;</sup></a>
+        </div>
+        <div class="nav-center" id="nav-center-menu">
+            <div class="mobile-drawer-header">
+                <span class="mobile-drawer-title">Travel Buddy<sup>&reg;</sup></span>
+            </div>
+            <nav class="nav-links">
+                <a href="#" id="nav-explorer-link" data-i18n="nav_explorer">City Explorer</a>
+                <a href="#" id="nav-route-optimizer-link" data-i18n="nav_route_optimizer">Route & Budget Optimizer</a>
+                <a href="planner.html" class="active" id="nav-planner-link" data-i18n="nav_planner">Trip Planner</a>
+                <a href="#" id="nav-safety-link" data-i18n="nav_safety">Safety Analysis</a>
+                <a href="#" id="nav-monitoring-link">
+                    <span class="nav-text-full" data-i18n="nav_monitoring_full">IoT Destination Monitor</span>
+                    <span class="nav-text-short" data-i18n="nav_monitoring_short">IoT Monitor</span>
+                </a>
+                <a href="#" id="nav-wanderguide-link" data-i18n="nav_wanderguide">Where to Eat & Explore</a>
+            </nav>
+            <div class="mobile-drawer-footer">
+                <a href="index.html" class="btn btn-drawer-cta btn-outline" data-i18n="nav_back_home">Back to Home</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <div id="lang-selector-container" class="lang-selector-container"></div>
+            <a href="index.html" class="btn btn-small btn-outline" data-i18n="nav_back_home">Back to Home</a>
+            <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle navigation menu" type="button">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </header>
+    <div class="mobile-nav-backdrop" id="mobile-nav-backdrop"></div>
+
+    <!-- Main Container -->
+    <main class="planner-container">
+
+        <!-- Wizard View -->
+        <section id="wizard-view" class="view-section active">
+            <div class="wizard-header">
+                <h1 class="wizard-title" data-i18n="wizard_title">Design Your Itinerary</h1>
+                <div class="progress-container">
+                    <div class="progress-bar" id="wizard-progress"></div>
+                </div>
+                <div class="step-indicators">
+                    <span class="step-dot active">1</span>
+                    <span class="step-dot">2</span>
+                    <span class="step-dot">3</span>
+                    <span class="step-dot">4</span>
+                    <span class="step-dot">5</span>
+                </div>
+            </div>
+
+            <div class="wizard-card">
+                <div class="wizard-content">
+                    <!-- Step 1: Destination & Dates -->
+                    <div class="wizard-step active" id="step-1">
+                        <h2 data-i18n="step_1_title">Where & When</h2>
+                        <div class="form-row">
+                            <div class="form-group" style="flex: 1;">
+                                <label for="origin" data-i18n="label_origin">Starting Location (Origin)</label>
+                                <input type="text" id="origin" placeholder="e.g. Delhi, India" autocomplete="off"
+                                    value="Delhi">
+                                <div id="origin-autocomplete" class="autocomplete-dropdown hidden"></div>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="destination" data-i18n="label_destination">Destination</label>
+                                <input type="text" id="destination" placeholder="e.g. Jaipur, Rajasthan"
+                                    autocomplete="off" value="">
+                                <div id="dest-autocomplete" class="autocomplete-dropdown hidden"></div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="label_travel_mode">Travel Mode</label>
+                            <div class="bro-travel-mode-group">
+                                <label class="bro-mode-card active">
+                                    <input type="radio" name="travel-mode" value="car" checked>
+                                    <span class="bro-mode-icon">🚗</span>
+                                    <span class="bro-mode-name">Car / Cab</span>
+                                    <span class="bro-mode-desc">Fuel + Tolls</span>
+                                </label>
+                                <label class="bro-mode-card">
+                                    <input type="radio" name="travel-mode" value="bus">
+                                    <span class="bro-mode-icon">🚌</span>
+                                    <span class="bro-mode-name">Bus</span>
+                                    <span class="bro-mode-desc">Public Transit</span>
+                                </label>
+                                <label class="bro-mode-card">
+                                    <input type="radio" name="travel-mode" value="train">
+                                    <span class="bro-mode-icon">🚆</span>
+                                    <span class="bro-mode-name">Train</span>
+                                    <span class="bro-mode-desc">Railways</span>
+                                </label>
+                                <label class="bro-mode-card">
+                                    <input type="radio" name="travel-mode" value="bike">
+                                    <span class="bro-mode-icon">🏍️</span>
+                                    <span class="bro-mode-name">Motorcycle</span>
+                                    <span class="bro-mode-desc">Economy Fuel</span>
+                                </label>
+                                <label class="bro-mode-card">
+                                    <input type="radio" name="travel-mode" value="flight">
+                                    <span class="bro-mode-icon">✈️</span>
+                                    <span class="bro-mode-name">Flight</span>
+                                    <span class="bro-mode-desc">Air Route</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="start-date" data-i18n="label_start_date">Start Date</label>
+                                <input type="date" id="start-date">
+                            </div>
+                            <div class="form-group">
+                                <label for="end-date" data-i18n="label_end_date">End Date</label>
+                                <input type="date" id="end-date">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Travelers & Pace -->
+                    <div class="wizard-step" id="step-2">
+                        <h2 data-i18n="step_2_title">Who & How</h2>
+                        <div class="form-group">
+                            <label for="travelers" data-i18n="label_travelers">Number of Travelers</label>
+                            <input type="number" id="travelers" min="1" max="20" value="2">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="label_travel_pace">Travel Pace</label>
+                            <div class="radio-group">
+                                <label class="radio-card"><input type="radio" name="pace" value="relaxed"> <span
+                                        data-i18n="pace_relaxed">Relaxed</span><small
+                                        data-i18n="pace_relaxed_desc">Slower pace, more downtime</small></label>
+                                <label class="radio-card"><input type="radio" name="pace" value="balanced" checked>
+                                    <span data-i18n="pace_balanced">Balanced</span><small
+                                        data-i18n="pace_balanced_desc">A good mix of exploring and rest</small></label>
+                                <label class="radio-card"><input type="radio" name="pace" value="packed"> <span
+                                        data-i18n="pace_packed">Packed</span><small data-i18n="pace_packed_desc">See as
+                                        much as possible</small></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Interests & Preferences -->
+                    <div class="wizard-step" id="step-3">
+                        <h2 data-i18n="step_3_title">Interests & Preferences</h2>
+                        <div class="form-group">
+                            <label data-i18n="label_select_interests">Select Interests</label>
+                            <div class="checkbox-grid">
+                                <label class="check-pill"><input type="checkbox" value="Culture"> <span
+                                        data-i18n="interest_culture">Culture & History</span></label>
+                                <label class="check-pill"><input type="checkbox" value="Food"> <span
+                                        data-i18n="interest_food">Food & Dining</span></label>
+                                <label class="check-pill"><input type="checkbox" value="Nature"> <span
+                                        data-i18n="interest_nature">Nature & Outdoors</span></label>
+                                <label class="check-pill"><input type="checkbox" value="Shopping"> <span
+                                        data-i18n="interest_shopping">Shopping</span></label>
+                                <label class="check-pill"><input type="checkbox" value="Nightlife"> <span
+                                        data-i18n="interest_nightlife">Nightlife</span></label>
+                                <label class="check-pill"><input type="checkbox" value="Adventure"> <span
+                                        data-i18n="interest_adventure">Adventure</span></label>
+                                <label class="check-pill"><input type="checkbox" value="Relaxation"> <span
+                                        data-i18n="interest_relaxation">Relaxation</span></label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="food-pref" data-i18n="label_dietary_pref">Dietary Preferences</label>
+                            <input type="text" id="food-pref" placeholder="e.g. Vegetarian, Halal (Optional)"
+                                data-i18n-placeholder="placeholder_dietary_pref">
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Budget & Notes -->
+                    <div class="wizard-step" id="step-4">
+                        <h2 data-i18n="step_4_title">Budget & Details</h2>
+                        <div class="form-group budget-group">
+                            <label for="budget" data-i18n="label_total_budget">Total Budget</label>
+                            <div class="currency-input" style="display: flex; gap: 10px;">
+                                <select id="currency"
+                                    style="padding: 0.8rem; border: 1px solid var(--border-color, #ddd); border-radius: 8px; background: var(--bg-light, #f9f9f9); color: var(--text-dark, #333); font-family: inherit; font-size: 1rem;">
+                                    <option value="INR" selected>INR (₹)</option>
+                                    <option value="USD">USD ($)</option>
+                                </select>
+                                <input type="number" id="budget" placeholder="e.g. 1000"
+                                    data-i18n-placeholder="placeholder_budget" style="flex: 1;" value="1000">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="notes" data-i18n="label_special_reqs">Special Requirements / Must-Visit
+                                Places</label>
+                            <textarea id="notes" rows="3"
+                                placeholder="Any specific requirements, accessibility needs, or places you must see?"
+                                data-i18n-placeholder="placeholder_special_reqs"></textarea>
+                        </div>
+                        <div class="bro-inline-embed">
+                            <button type="button" class="bro-check-btn" id="btn-check-budget">
+                                <span>⚡ Check Budget Feasibility & Compare Routes</span>
+                            </button>
+                            <div id="budget-feasibility-container" class="hidden" style="margin-top: 14px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Review -->
+                    <div class="wizard-step" id="step-5">
+                        <h2 data-i18n="step_5_title">Review Your Trip</h2>
+                        <div id="review-summary" class="review-box">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wizard-footer">
+                    <button class="btn btn-outline" id="btn-prev" disabled data-i18n="btn_back">Back</button>
+                    <button class="btn" id="btn-next" data-i18n="btn_next">Next Step</button>
+                    <button class="btn btn-primary hidden" id="btn-generate" data-i18n="btn_generate">Generate
+                        Itinerary</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="hidden">
+            <div class="loader-content">
+                <div class="spinner"></div>
+                <h2 class="loader-text" data-i18n="loader_crafting">AI is crafting your perfect escape...</h2>
+                <p id="loader-status" class="hidden" style="display:none;"></p>
+            </div>
+        </div>
+
+        <!-- Dashboard View -->
+        <section id="dashboard-view" class="view-section hidden">
+            <!-- Sidebar: Copilot -->
+            <aside class="dashboard-sidebar left-sidebar">
+                <div class="copilot-header">
+                    <h3 data-i18n="copilot_title">Trip Copilot AI</h3>
+                    <span class="online-dot"></span>
+                </div>
+                <div class="copilot-chat" id="copilot-chat">
+                    <div class="msg ai-msg" data-i18n="copilot_welcome">Hello! I've drafted your itinerary. Want me to
+                        tweak anything? (e.g. "make day 2 cheaper", "more relaxed")</div>
+                </div>
+                <div class="copilot-input">
+                    <input type="text" id="copilot-text" placeholder="Ask me to change something..."
+                        data-i18n-placeholder="copilot_placeholder">
+                    <button id="btn-send-copilot" data-i18n="copilot_send">Send</button>
+                </div>
+            </aside>
+
+            <!-- Main Itinerary -->
+            <div class="dashboard-main">
+                <div class="dashboard-header-banner">
+                    <div class="dash-title-section">
+                        <div class="dash-title-row">
+                            <h1 id="dash-dest-title" data-i18n="dash_your_trip">Your Trip</h1>
+                            <span class="dash-title-icon">🏔️</span>
+                        </div>
+                        <p class="dash-subtitle" id="dash-dest-subtitle">Adventure • Peace • Nature</p>
+                    </div>
+                    <div class="dash-banner-quote">
+                        <span>Good Trips<br><em>Better You</em></span>
+                    </div>
+                </div>
+
+                <div class="dash-toolbar-row">
+                    <div class="dash-action-group dash-feature-tools">
+                        <button class="btn btn-dash-tool btn-tool-eat" id="btn-view-wanderguide"
+                            data-i18n="dash_btn_wanderguide"><span>🍴</span> Where to Eat &amp; Explore</button>
+                        <button class="btn btn-dash-tool btn-tool-city" id="btn-explore-city"
+                            data-i18n="dash_btn_explorer"><span>🏙️</span> Explore City</button>
+                        <button class="btn btn-dash-tool btn-tool-safety" id="btn-view-safety"
+                            data-i18n="dash_btn_safety"><span>🛡️</span> View Safety Analysis</button>
+                        <button class="btn btn-dash-tool btn-tool-iot" id="btn-view-dest-monitoring"
+                            data-i18n="dash_btn_monitoring"><span>📡</span> IoT Destination Monitor</button>
+                    </div>
+                    <div class="dash-action-group dash-utility-tools">
+                        <button class="btn btn-dash-action btn-dash-export" data-i18n="dash_btn_export"><span>📥</span>
+                            Export</button>
+                        <button class="btn btn-dash-action btn-dash-save" data-i18n="dash_btn_save"><span>🔖</span> Save
+                            Trip</button>
+                    </div>
+                </div>
+                <div class="itinerary-timeline" id="itinerary-container">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Right Sidebar: Stats & Map -->
+            <aside class="dashboard-sidebar right-sidebar">
+                <div class="stats-card">
+                    <h3 data-i18n="score_quality_title">Trip Quality Score</h3>
+                    <div class="score-circle" id="quality-score">95</div>
+                    <p class="score-desc" data-i18n="score_desc">Excellent match for your preferences and budget.</p>
+                </div>
+                <div class="stats-card">
+                    <h3 data-i18n="cost_breakdown_title">Cost Breakdown (Est.)</h3>
+                    <ul class="cost-list" id="cost-breakdown">
+                        <!-- Populated by JS -->
+                    </ul>
+                    <div class="cost-total"><span data-i18n="cost_total">Total:</span> <span id="cost-total">$0</span>
+                    </div>
+                </div>
+                <div class="map-card">
+                    <h3 data-i18n="interactive_map_title">Interactive Map</h3>
+                    <div class="map-placeholder" id="map-container">
+                        <iframe id="interactive-map" allowfullscreen="" loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+            </aside>
+        </section>
+
+        <!-- Safety Loading Overlay -->
+        <div id="safety-loading-overlay" class="hidden">
+            <div class="loader-content">
+                <div class="spinner"></div>
+                <h2 class="loader-text">Analyzing Trip Safety...</h2>
+                <p id="safety-loader-status">Evaluating weather, crowds, and location data...</p>
+            </div>
+        </div>
+
+        <!-- Safety Intelligence View -->
+        <section id="safety-dashboard-view" class="view-section safety-section hidden">
+            <div class="safety-header-banner" style="position: relative;">
+                <button id="btn-back-to-itinerary" class="btn btn-small btn-outline"
+                    style="position: absolute; left: 0; top: 0;" data-i18n="btn_back_to_itinerary">&larr; Back to
+                    Itinerary</button>
+                <h2 data-i18n="safety_banner_title">🛡️ TRAVELX Safety Intelligence</h2>
+                <p data-i18n="safety_banner_sub">AI-powered safety and timing analysis for your itinerary</p>
+            </div>
+
+            <!-- Controls & Transparency -->
+            <div class="safety-controls-bar">
+                <div class="pref-toggle">
+                    <label data-i18n="label_opt_pref">Optimization Preference:</label>
+                    <select id="optimization-preference" class="pref-select">
+                        <option value="safety" data-i18n="opt_safety_first">🛡️ Safety First</option>
+                        <option value="balanced" selected data-i18n="opt_balanced">⚖️ Balanced</option>
+                        <option value="experience" data-i18n="opt_experience_first">🎒 Experience First</option>
+                    </select>
+                </div>
+                <div class="data-transparency">
+                    <div class="transparency-info">
+                        <span id="last-analysis-time">Last Analysis: --:--</span>
+                        <div class="source-tooltip">
+                            <span>📡 Data Sources</span>
+                            <div class="tooltip-content">
+                                <div>🌦️ Weather — Weather API</div>
+                                <div>📍 Location — Maps/Location API</div>
+                                <div>👥 Crowd — AI Estimate / Crowd API</div>
+                                <div>🤖 Intelligence — Groq AI</div>
+                                <div>🗺️ Route — Maps/Routing API</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button id="btn-refresh-analysis" class="btn-small btn-outline" data-i18n="btn_refresh_analysis">↻
+                        Refresh Analysis</button>
+                </div>
+            </div>
+
+            <!-- AI Copilot Card -->
+            <div class="copilot-main-card">
+                <div class="copilot-title">🧠 TRAVELX AI Trip Copilot</div>
+                <p id="copilot-summary" class="copilot-summary-text">Analyzing your trip...</p>
+                <div id="copilot-highlights" class="copilot-highlights-container">
+                    <!-- Populated by JS -->
+                </div>
+                <button id="btn-optimize-trip" class="btn btn-primary optimize-btn" data-i18n="btn_optimize_trip">✨
+                    Optimize My Trip</button>
+            </div>
+
+            <div class="safety-grid">
+                <!-- Main Safety Score Card -->
+                <div class="safety-card score-card">
+                    <h3 data-i18n="card_overall_safety">Overall Safety Score</h3>
+                    <div class="score-ring-container">
+                        <svg class="score-ring" viewBox="0 0 36 36">
+                            <path class="ring-bg"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path class="ring-fill" id="safety-score-ring" stroke-dasharray="0, 100"
+                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="score-value" id="overall-safety-score">--</div>
+                    </div>
+                    <div class="score-status" id="overall-safety-status">Analyzing...</div>
+                    <div class="score-confidence" id="safety-confidence">Confidence: --</div>
+                    <div class="score-explanation" id="safety-score-explanation"></div>
+                </div>
+
+                <!-- Safety Categories -->
+                <div class="safety-card categories-card">
+                    <h3>Safety Indicators</h3>
+                    <div class="indicators-grid" id="safety-indicators">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Weather Safety -->
+                <div class="safety-card weather-card">
+                    <h3 data-i18n="card_weather_safety">🌦️ Weather Safety</h3>
+                    <div id="weather-current-conditions" class="weather-current">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div id="weather-details" class="weather-details-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="weather-timeline-title">Timeline</div>
+                    <div id="weather-timeline" class="timeline-row">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div id="weather-recommendation" class="weather-recommendation"></div>
+                </div>
+
+                <!-- Crowd Density -->
+                <div class="safety-card crowd-card">
+                    <h3 data-i18n="card_crowd_density">👥 Crowd Density Intelligence</h3>
+                    <div class="crowd-status-bar">
+                        <span id="crowd-status-label">Crowd Status: AI Estimated</span>
+                    </div>
+                    <div class="crowd-list" id="crowd-density-list">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div id="ai-best-time-section" class="best-time-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Safety Alerts -->
+                <div class="safety-card alerts-card full-width">
+                    <h3 data-i18n="card_safety_alerts">🚨 Safety Alerts</h3>
+                    <div class="alerts-list" id="safety-alerts-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Itinerary Optimization -->
+                <div class="safety-card optimization-card full-width">
+                    <h3 data-i18n="card_optimization">🔄 Safety-Aware Itinerary Optimization</h3>
+                    <div class="optimization-list" id="itinerary-changes-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Why TRAVELX Recommended This -->
+                <div class="safety-card reasoning-card full-width">
+                    <h3 data-i18n="card_reasoning">🧠 Why TRAVELX Recommended This</h3>
+                    <div class="reasoning-list" id="recommendations-list">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Safe Route Recommendation -->
+                <div class="safety-card route-card full-width">
+                    <h3 data-i18n="card_safe_route">🛡️ Safe Route Recommendation</h3>
+                    <p class="route-disclaimer">AI-recommended route based on available destination and route context.
+                    </p>
+                    <div class="route-map-container"
+                        style="width: 100%; height: 300px; border-radius: 12px; overflow: hidden; margin-bottom: 16px;">
+                        <iframe id="safe-route-map" width="100%" height="100%" style="border:0;" loading="lazy"
+                            allowfullscreen src=""></iframe>
+                    </div>
+                    <div class="route-details" id="route-safety-info">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Travel Risk Radar -->
+                <div class="safety-card radar-card full-width">
+                    <h3 data-i18n="card_risk_radar">🚨 Travel Risk Radar</h3>
+                    <div class="radar-container" id="travel-risk-radar">
+                        <!-- Populated by JS (Progress bars) -->
+                    </div>
+                </div>
+
+                <!-- Trip Readiness -->
+                <div class="safety-card readiness-card full-width">
+                    <h3 data-i18n="card_trip_readiness">🎒 Trip Readiness</h3>
+                    <div class="readiness-container">
+                        <div class="readiness-score" id="trip-readiness-score">--%</div>
+                        <div class="readiness-status" id="trip-readiness-status">Checking...</div>
+                    </div>
+                    <div class="readiness-factors" id="trip-readiness-factors">
+                        <!-- Populated by JS -->
+                    </div>
+                    <div class="readiness-message" id="trip-readiness-message"></div>
+                </div>
+
+                <!-- Trip Safety Summary -->
+                <div class="safety-card summary-card full-width">
+                    <h3 data-i18n="card_safety_summary">🛡️ Trip Safety Summary</h3>
+                    <div class="summary-stats" id="trip-safety-summary">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Travel Safety Center -->
+                <div class="safety-card emergency-card full-width">
+                    <h3 data-i18n="card_emergency_center">🚨 Travel Safety Center</h3>
+                    <div class="emergency-grid">
+                        <div class="emergency-item"><span data-i18n="emergency_police">🚓 Police / Emergency</span>
+                            <strong>911 / 112</strong></div>
+                        <div class="emergency-item" style="padding-bottom: 8px;">
+                            <span data-i18n="emergency_hospital">🚑 Nearby Hospital</span>
+                            <iframe id="hospital-map" width="100%" height="120"
+                                style="border:0; border-radius: 8px; margin-top: 4px;" loading="lazy" allowfullscreen
+                                src=""></iframe>
+                        </div>
+                        <div class="emergency-item"><span data-i18n="emergency_share">📍 Share Location</span> <button
+                                id="btn-share-whatsapp" class="btn-small btn-outline" data-i18n="btn_share_wa">Share via
+                                WhatsApp</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IoT Destination Monitoring Banner Inside Safety View -->
+            <div class="safety-card iot-cta-card full-width">
+                <div class="iot-cta-badge" data-i18n="mon_future_scope">FUTURE SCOPE PREVIEW</div>
+                <div class="iot-cta-flex">
+                    <div class="iot-cta-info">
+                        <h3>📡 Destination Capacity & Remote IoT Telemetry</h3>
+                        <p>Explore real-time destination infrastructure capacity (hotels, attractions, operators,
+                            tourist zones) and live remote IoT sensors (water level surge, heavy rain, and crowd
+                            telemetry).</p>
+                    </div>
+                    <button id="btn-jump-to-iot" class="btn btn-primary"
+                        style="background-color: #8b5cf6; color: white;">Open IoT Destination Monitor &rarr;</button>
+                </div>
+            </div>
+
+            <div class="safety-disclaimer">
+                AI-powered travel safety guidance. Conditions can change; always verify official local advisories and
+                emergency information before and during travel.
+            </div>
+        </section>
+
+        <!-- Destination Monitoring & IoT Telemetry View -->
+        <section id="destination-monitoring-view" class="view-section monitoring-section hidden">
+            <!-- Header Banner -->
+            <div class="monitoring-header-banner">
+                <div class="monitoring-header-nav">
+                    <button id="btn-back-from-monitoring" class="btn btn-small btn-outline" data-i18n="btn_back">&larr;
+                        Back to Dashboard</button>
+                    <button id="btn-monitoring-to-safety" class="btn btn-small btn-outline" style="margin-left: 8px;"
+                        data-i18n="nav_safety">🛡️ Safety Analysis</button>
+                </div>
+                <div class="monitoring-title-area">
+                    <div class="mon-badge-row">
+                        <span class="mon-live-badge" data-i18n="mon_live_grid"><span class="pulse-dot"></span> LIVE
+                            SENSOR GRID</span>
+                        <span class="mon-scope-badge" data-i18n="mon_future_scope">FUTURE SCOPE PREVIEW</span>
+                    </div>
+                    <h2 data-i18n="mon_main_title">📡 Smart Destination Monitoring & IoT Telemetry</h2>
+                    <p class="mon-subtext" data-i18n="mon_main_sub">Real-time destination carrying capacity,
+                        environmental hydrological monitoring, and edge-computing IoT sensor deployment.</p>
+                </div>
+                <!-- Destination Switcher & Status -->
+                <div class="mon-selector-box">
+                    <div class="mon-dest-select-wrap">
+                        <label for="mon-city-select" data-i18n="mon_label_city">Monitored Destination:</label>
+                        <select id="mon-city-select" class="mon-select-dropdown">
+                            <option value="rishikesh">Rishikesh, Uttarakhand</option>
+                            <option value="shillong">Shillong, Meghalaya</option>
+                            <option value="tokyo">Tokyo, Japan</option>
+                            <option value="mumbai">Mumbai, India</option>
+                            <option value="paris">Paris, France</option>
+                            <option value="new york">New York, USA</option>
+                            <option value="london">London, UK</option>
+                            <option value="delhi">Delhi, India</option>
+                            <option value="jaipur">Jaipur, Rajasthan</option>
+                            <option value="dubai">Dubai, UAE</option>
+                        </select>
+                    </div>
+                    <div class="mon-system-status">
+                        <span class="status-indicator-dot online"></span>
+                        <span data-i18n="mon_grid_operational">Grid Status: <strong>100% Operational</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 1: Destination Capacity Overview -->
+            <div class="mon-card mon-capacity-card">
+                <div class="mon-section-header">
+                    <div>
+                        <span class="section-step-tag" data-i18n="mon_infra_tag">1. DESTINATION INFRASTRUCTURE</span>
+                        <h3 id="mon-infra-title">Capacity & Ecosystem Monitoring: Rishikesh, Uttarakhand</h3>
+                        <p class="mon-desc-text">Let's say your system monitors a destination containing:</p>
+                    </div>
+                    <div class="mon-sync-info">
+                        <span>🔄 Telemetry sync rate: <strong>5 sec</strong></span>
+                    </div>
+                </div>
+
+                <div class="mon-capacity-grid">
+                    <div class="mon-metric-card" id="card-hotels">
+                        <div class="mon-metric-icon">🏨</div>
+                        <div class="mon-metric-info">
+                            <div class="mon-metric-number" id="mon-hotels-count">340</div>
+                            <div class="mon-metric-label" data-i18n="mon_hotels_monitored">Hotels Monitored</div>
+                            <div class="mon-metric-sub" id="mon-hotels-sub">Est. 8,200 Rooms • Live Occupancy: 76%</div>
+                        </div>
+                    </div>
+                    <div class="mon-metric-card" id="card-attractions">
+                        <div class="mon-metric-icon">🏞️</div>
+                        <div class="mon-metric-info">
+                            <div class="mon-metric-number" id="mon-attractions-count">45</div>
+                            <div class="mon-metric-label" data-i18n="mon_attractions_tracked">Attractions Tracked</div>
+                            <div class="mon-metric-sub" id="mon-attractions-sub">Laxman Jhula, Ram Jhula, Triveni Ghat,
+                                Parmarth Niketan</div>
+                        </div>
+                    </div>
+                    <div class="mon-metric-card" id="card-operators">
+                        <div class="mon-metric-icon">🚐</div>
+                        <div class="mon-metric-info">
+                            <div class="mon-metric-number" id="mon-operators-count">65</div>
+                            <div class="mon-metric-label" data-i18n="mon_travel_operators">Travel Operators</div>
+                            <div class="mon-metric-sub" id="mon-operators-sub">190 Registered Rafting Camps & Transit
+                                Shuttles</div>
+                        </div>
+                    </div>
+                    <div class="mon-metric-card" id="card-zones">
+                        <div class="mon-metric-icon">📍</div>
+                        <div class="mon-metric-info">
+                            <div class="mon-metric-number" id="mon-zones-count">16</div>
+                            <div class="mon-metric-label" data-i18n="mon_tourist_zones">Tourist Zones</div>
+                            <div class="mon-metric-sub" id="mon-zones-sub">Ghats, Tapovan & Riverbank Eco-Sectors</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Time Simulation & Real-Time Telemetry (Matches User Image Exactly) -->
+            <div class="mon-telemetry-section">
+                <!-- Time Simulator Controls -->
+                <div class="time-simulator-bar">
+                    <div class="sim-label">
+                        <span>⏱️ <strong>Time-of-Day Telemetry Simulation:</strong></span>
+                        <small>Simulate environmental and crowd fluctuations throughout the day</small>
+                    </div>
+                    <div class="time-pill-group">
+                        <button class="time-pill" data-time="06:00 AM">06:00 AM (Dawn)</button>
+                        <button class="time-pill active" data-time="09:00 AM">09:00 AM (Morning Peak)</button>
+                        <button class="time-pill" data-time="01:00 PM">01:00 PM (Afternoon)</button>
+                        <button class="time-pill" data-time="05:00 PM">05:00 PM (Monsoon Influx)</button>
+                        <button class="time-pill" data-time="09:00 PM">09:00 PM (Night Calm)</button>
+                    </div>
+                </div>
+
+                <div class="mon-telemetry-dual-layout">
+                    <!-- The Dark Terminal Card matching user's image exactly -->
+                    <div class="mon-telemetry-terminal-wrapper">
+                        <div class="mon-card-caption">
+                            <h3 id="mon-example-heading">2. Example: Rishikesh</h3>
+                            <span class="mon-timestamp-badge" id="mon-time-header">At 9 AM:</span>
+                        </div>
+
+                        <div class="dark-terminal-card" id="terminal-screen">
+                            <div class="terminal-topbar">
+                                <div class="terminal-dots">
+                                    <span class="t-dot red"></span>
+                                    <span class="t-dot yellow"></span>
+                                    <span class="t-dot green"></span>
+                                </div>
+                                <span class="terminal-tag">DESTINATION_TELEMETRY_LOG // ACTIVE</span>
+                                <span class="terminal-node-id" id="mon-node-id">NODE: RSH-JHULA-03</span>
+                            </div>
+
+                            <div class="terminal-content">
+                                <div class="terminal-row">
+                                    <span class="t-label">Tourists currently:</span>
+                                    <span class="t-val t-highlight-number" id="disp-tourists">14,800</span>
+                                </div>
+
+                                <div class="terminal-row">
+                                    <span class="t-label">Hotel occupancy:</span>
+                                    <span class="t-val t-highlight-pct" id="disp-occupancy">76%</span>
+                                </div>
+
+                                <div class="terminal-row">
+                                    <span class="t-label">Popular destination:</span>
+                                    <span class="t-val t-highlight-place" id="disp-popular">Laxman Jhula & Tapovan
+                                        Cafes</span>
+                                </div>
+
+                                <div class="terminal-row">
+                                    <span class="t-label">Current crowd:</span>
+                                    <span class="t-badge t-badge-high" id="disp-crowd">HIGH</span>
+                                </div>
+
+                                <div class="terminal-row">
+                                    <span class="t-label">Rain:</span>
+                                    <span class="t-val t-val-rain" id="disp-rain">Clear / Mountain Breeze</span>
+                                </div>
+
+                                <div class="terminal-row">
+                                    <span class="t-label">Water level:</span>
+                                    <span class="t-badge t-badge-moderate" id="disp-water">Ganges Flow Optimal</span>
+                                </div>
+
+                                <div class="terminal-row">
+                                    <span class="t-label">Road condition:</span>
+                                    <span class="t-badge t-badge-moderate" id="disp-road">Brisk Pilgrim Traffic</span>
+                                </div>
+                            </div>
+
+                            <div class="terminal-statusbar">
+                                <div class="telemetry-pulse-status">
+                                    <span class="live-pulse"></span>
+                                    <span>LoRaWAN Mesh Uplink • 868 MHz • 42ms ping</span>
+                                </div>
+                                <span class="telemetry-last-packet" id="disp-last-packet">Packet received: just
+                                    now</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side Action & Early Warning Console -->
+                    <div class="mon-intel-sidebar">
+                        <div class="intel-card alert-intel-card" id="intel-alert-box">
+                            <div class="intel-header">
+                                <span class="intel-icon">⚠️</span>
+                                <div>
+                                    <h4 id="intel-alert-title">AUTOMATIC SAFETY ADVISORY TRIGGERED</h4>
+                                    <span class="intel-time" id="intel-alert-sub">Laxman Jhula & Tapovan Sector</span>
+                                </div>
+                            </div>
+                            <p class="intel-body" id="intel-alert-body">
+                                Optical flow monitors register <strong>240 persons/min</strong> approaching suspension
+                                pathways. Rafting permits synchronized across 65 river outfitters.
+                            </p>
+                            <div class="intel-actions">
+                                <button class="btn btn-small" id="btn-broadcast-operators"
+                                    style="background-color: #ef4444; color: white; border: none; width: 100%;">
+                                    📢 Broadcast Warning to 65 Travel Operators
+                                </button>
+                                <button class="btn btn-small btn-outline" id="btn-reroute-tourists"
+                                    style="width: 100%; margin-top: 8px;">
+                                    🗺️ Suggest Alternate Attractions (Beatles Ashram / Vashistha Cave)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Active Remote Sensor Station Picker -->
+                        <div class="intel-card stations-card">
+                            <h4>Selected Remote IoT Stations</h4>
+                            <div class="station-list" id="mon-stations-list">
+                                <div class="station-item active" data-node="NODE: RSH-GHAT-01"
+                                    data-place="Triveni Ghat">
+                                    <div class="st-indicator green"></div>
+                                    <div class="st-info">
+                                        <strong>Triveni Ghat Hydro-Buoy #01</strong>
+                                        <small>River Velocity & Flood Stage Gauge</small>
+                                    </div>
+                                    <span class="st-status badge-normal">Normal</span>
+                                </div>
+                                <div class="station-item" data-node="NODE: RSH-JHULA-03" data-place="Laxman Jhula">
+                                    <div class="st-indicator green"></div>
+                                    <div class="st-info">
+                                        <strong>Laxman Jhula Strain Sensor #03</strong>
+                                        <small>Pedestrian Load & Cable Vibration</small>
+                                    </div>
+                                    <span class="st-status badge-alert">Alert</span>
+                                </div>
+                                <div class="station-item" data-node="NODE: RSH-RAM-05" data-place="Ram Jhula">
+                                    <div class="st-indicator green"></div>
+                                    <div class="st-info">
+                                        <strong>Ram Jhula Waterfront Station #05</strong>
+                                        <small>Optical Flow & Ashram Density</small>
+                                    </div>
+                                    <span class="st-status badge-normal">Normal</span>
+                                </div>
+                                <div class="station-item" data-node="NODE: RSH-RIVER-06" data-place="Shivpuri Rapid">
+                                    <div class="st-indicator green"></div>
+                                    <div class="st-info">
+                                        <strong>Shivpuri Rafting Rapid Sensor #06</strong>
+                                        <small>Discharge Velocity & Water Temp</small>
+                                    </div>
+                                    <span class="st-status badge-alert">Alert</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Future Scope - IoT Sensor Hardware & Architecture -->
+            <div class="mon-card future-scope-card">
+                <div class="scope-header-block">
+                    <div class="future-badge">FUTURE SCOPE ROADMAP</div>
+                    <h3>3. The IoT Sensors We Are Making: Hardware & Remote Telemetry</h3>
+                    <p>When physical deployment begins in remote tourist locations, these custom-engineered IoT sensor
+                        pods provide autonomous, zero-grid intelligence back to the TravelBuddy platform.</p>
+                </div>
+
+                <!-- Hardware Showcase Grid -->
+                <div class="sensor-hardware-grid">
+                    <!-- Sensor 1 -->
+                    <div class="sensor-card">
+                        <div class="sc-header">
+                            <span class="sc-icon">🌊</span>
+                            <div class="sc-meta">
+                                <h4>Hydro-Sense Edge X1</h4>
+                                <span class="sc-tag">Acoustic / Ultrasonic Hydrological Sensor</span>
+                            </div>
+                        </div>
+                        <p class="sc-desc">Continuously fires high-frequency acoustic soundwaves to measure waterfall
+                            plunge pool and stream depth elevation.</p>
+                        <div class="sc-specs">
+                            <div class="sc-spec-row"><span>Target Location:</span> <strong>Elephant Falls & Gorge
+                                    Streams</strong></div>
+                            <div class="sc-spec-row"><span>Measurement:</span> <strong>Stream Rise Velocity
+                                    (+1.4m/hr)</strong></div>
+                            <div class="sc-spec-row"><span>Power Source:</span> <strong>Solar + Supercapacitor (Zero
+                                    Grid)</strong></div>
+                            <div class="sc-spec-row"><span>Telemetry Output:</span> <strong
+                                    style="color: #f59e0b;">Water Level: Rising</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor 2 -->
+                    <div class="sensor-card">
+                        <div class="sc-header">
+                            <span class="sc-icon">👥</span>
+                            <div class="sc-meta">
+                                <h4>CrowdSense LiDAR Pod</h4>
+                                <span class="sc-tag">Optical Edge AI Crowd Profiler</span>
+                            </div>
+                        </div>
+                        <p class="sc-desc">Privacy-preserving edge computer that counts footfall throughput with zero
+                            facial recognition or PII storage.</p>
+                        <div class="sc-specs">
+                            <div class="sc-spec-row"><span>Target Location:</span> <strong>Waterfall Entry Stairwells &
+                                    Bridges</strong></div>
+                            <div class="sc-spec-row"><span>Measurement:</span> <strong>340 Persons/min Flow
+                                    Rate</strong></div>
+                            <div class="sc-spec-row"><span>Edge Compute:</span> <strong>ARM Cortex-M55 TinyML
+                                    Inference</strong></div>
+                            <div class="sc-spec-row"><span>Telemetry Output:</span> <strong
+                                    style="color: #ef4444;">Current Crowd: HIGH</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor 3 -->
+                    <div class="sensor-card">
+                        <div class="sc-header">
+                            <span class="sc-icon">🌧️</span>
+                            <div class="sc-meta">
+                                <h4>Pluvio-Mesh Optical Gauge</h4>
+                                <span class="sc-tag">Piezoelectric Kinetic Rain Gauge</span>
+                            </div>
+                        </div>
+                        <p class="sc-desc">Measures raindrop kinetic energy and instantaneous precipitation rates
+                            without moving parts that clog with mountain leaves.</p>
+                        <div class="sc-specs">
+                            <div class="sc-spec-row"><span>Target Location:</span> <strong>Ridge Topographic Zones
+                                    (Shillong Peak)</strong></div>
+                            <div class="sc-spec-row"><span>Measurement:</span> <strong>48 mm/hr Rain Intensity</strong>
+                            </div>
+                            <div class="sc-spec-row"><span>Storm Prediction:</span> <strong>Cloudburst Pre-Alert Window:
+                                    15 min</strong></div>
+                            <div class="sc-spec-row"><span>Telemetry Output:</span> <strong
+                                    style="color: #38bdf8;">Rain: Heavy</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- Sensor 4 -->
+                    <div class="sensor-card">
+                        <div class="sc-header">
+                            <span class="sc-icon">🛣️</span>
+                            <div class="sc-meta">
+                                <h4>GeoSlope Tilt & Moisture Probe</h4>
+                                <span class="sc-tag">Subsurface Geotechnical Telemetry</span>
+                            </div>
+                        </div>
+                        <p class="sc-desc">Dual-axis inclinometer and soil dielectric permittivity sensor detecting
+                            hillside earth movements along transit roads.</p>
+                        <div class="sc-specs">
+                            <div class="sc-spec-row"><span>Target Location:</span> <strong>NH-6 Approach Roads & Hill
+                                    Cut Routes</strong></div>
+                            <div class="sc-spec-row"><span>Measurement:</span> <strong>Soil Saturation: 82% • Tilt:
+                                    0.14°</strong></div>
+                            <div class="sc-spec-row"><span>Warning Type:</span> <strong>Mudslip / Slush Slippage
+                                    Warning</strong></div>
+                            <div class="sc-spec-row"><span>Telemetry Output:</span> <strong style="color: #fbbf24;">Road
+                                    Condition: Moderate</strong></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phased Deployment Roadmap -->
+                <div class="deployment-roadmap">
+                    <h4 class="roadmap-title">📅 Phased Rollout & Availability Scope</h4>
+                    <div class="roadmap-timeline">
+                        <div class="roadmap-step active">
+                            <div class="step-badge">PHASE 1 (CURRENT)</div>
+                            <div class="step-title">Pilot Telemetry & Simulation</div>
+                            <p>Simulated edge telemetry feeds integrated into TravelBuddy dashboard for Shillong,
+                                Elephant Falls & Umiam Lake.</p>
+                        </div>
+                        <div class="roadmap-step">
+                            <div class="step-badge">PHASE 2 (Q3-Q4 2026)</div>
+                            <div class="step-title">Hardware Field Deployment</div>
+                            <p>Rollout of 20 physical solar-powered LoRaWAN pods across remote, landslide-prone
+                                eco-tourism hotspots in Meghalaya.</p>
+                        </div>
+                        <div class="roadmap-step">
+                            <div class="step-badge">PHASE 3 (2027)</div>
+                            <div class="step-title">Autonomous Smart Tourism Grid</div>
+                            <p>Direct real-time diversion alerts dispatched to registered travel operator fleets, police
+                                control rooms, and TravelBuddy app users.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operator Advisory Dispatch Modal / Toast Container -->
+            <div id="operator-toast" class="mon-toast hidden">
+                <div class="toast-icon">📢</div>
+                <div class="toast-content">
+                    <strong>Advisory Broadcast Sent!</strong>
+                    <span id="toast-msg-text">50 registered travel operators and 18,200 active tourists received the
+                        Elephant Falls high-water level reroute alert.</span>
+                </div>
+                <button id="btn-close-toast" class="toast-close">&times;</button>
+            </div>
+        </section>
+
+        <!-- City Explorer View -->
+        <section id="city-explorer-view" class="view-section city-explorer-section hidden">
+            <!-- Header -->
+            <div class="city-header-banner">
+                <div class="city-header-content">
+                    <div class="city-title-wrapper">
+                        <h2 id="ce-city-name" data-i18n="ce_default_title">Select a City</h2>
+                        <span id="ce-country-name"></span>
+                    </div>
+                    <p id="ce-city-desc" data-i18n="ce_default_desc">Discover the city before you plan your trip.</p>
+                </div>
+                <div class="city-selector-wrapper">
+                    <input type="text" id="ce-city-search" class="city-search-input"
+                        placeholder="Enter any city across India (e.g. Udaipur, Jaipur, Agra, Delhi, Mumbai)..." data-i18n-placeholder="ce_placeholder"
+                        autocomplete="off">
+                    <div id="ce-search-suggestions" class="ce-search-suggestions hidden"></div>
+                </div>
+            </div>
+
+            <div class="ce-insights-row" id="ce-insights-row">
+                <!-- Data Insight cards: Weather, Safety, Crowd, etc populated by JS -->
+            </div>
+
+            <!-- Split Layout for Places & Map -->
+            <div class="ce-split-layout">
+                <!-- Left: Places Sidebar -->
+                <div class="ce-places-sidebar">
+                    <!-- List View -->
+                    <div id="ce-sidebar-list" style="display: flex; flex-direction: column; height: 100%;">
+                        <div class="ce-section-title">
+                            <h3 data-i18n="ce_places_title">📌 Important Places</h3>
+                            <div class="ce-filters" id="ce-place-filters">
+                                <button class="ce-filter-btn active" data-filter="all"
+                                    data-i18n="ce_filter_all">All</button>
+                                <button class="ce-filter-btn" data-filter="Attraction"
+                                    data-i18n="ce_filter_attractions">Attractions</button>
+                                <button class="ce-filter-btn" data-filter="Culture"
+                                    data-i18n="ce_filter_culture">Culture</button>
+                                <button class="ce-filter-btn" data-filter="Nature"
+                                    data-i18n="ce_filter_nature">Nature</button>
+                            </div>
+                        </div>
+                        <div class="ce-photo-disclaimer">
+                            <span>ℹ️ <strong>Disclaimer:</strong> Photos shown for places are illustrative and representative. Images may not reflect the exact current appearance.</span>
+                        </div>
+                        <div class="ce-places-list" id="ce-places-grid">
+                            <p style="color:#94a3b8; padding: 20px;">Search for a city to see places here.</p>
+                        </div>
+                    </div>
+
+                    <!-- Detail View (Hidden by default) -->
+                    <div id="ce-sidebar-detail" class="hidden"
+                        style="display: flex; flex-direction: column; height: 100%;">
+                        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+                            <button id="ce-back-to-list"
+                                style="background: none; border: none; color: #0f172a; font-size: 24px; cursor: pointer; padding: 0;">&larr;</button>
+                            <h3 id="ce-detail-title"
+                                style="margin: 0; font-size: 28px; font-family: 'Instrument Serif', serif; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #0f172a;">
+                                Place Name</h3>
+                            <button id="ce-detail-add-btn" class="btn"
+                                style="margin-left: auto; padding: 8px 16px; flex-shrink: 0; background: #000000; color: #ffffff; border-radius: 999px;"
+                                data-i18n="ce_add_to_trip">Add to Trip</button>
+                        </div>
+                        <div id="ce-detail-content" style="flex: 1; overflow-y: auto; padding-right: 12px;"
+                            class="ce-places-list">
+                            <div id="ce-detail-img"
+                                style="width: 100%; height: 300px; background: #f1f5f9; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-size: 64px;">
+                                📸</div>
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <span id="ce-detail-category"
+                                    style="color: #475569; font-weight: bold; background: #f1f5f9; padding: 4px 12px; border-radius: 20px; font-size: 14px; text-transform: uppercase;">Category</span>
+                                <span id="ce-detail-rating" style="color: #fbbf24; font-weight: bold;">⭐ 4.5</span>
+                            </div>
+                            <h4
+                                style="font-size: 18px; margin-bottom: 12px; color: #0f172a; font-family: 'Instrument Serif', serif;">
+                                About</h4>
+                            <p id="ce-detail-desc" style="color: #475569; line-height: 1.7; font-size: 15px;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Map Area -->
+                <div class="ce-map-area">
+                    <div class="ce-3d-container" id="ce-3d-container" style="width: 100%; height: 100%; z-index: 1;">
+                        <!-- Leaflet Map Object will be injected here -->
+                    </div>
+                    <div class="ce-map-legend" style="z-index: 400;">
+                        <span class="legend-item"><span class="marker-dot attraction"></span> Attraction</span>
+                        <span class="legend-item"><span class="marker-dot culture"></span> Culture</span>
+                        <span class="legend-item"><span class="marker-dot food"></span> Food</span>
+                        <span class="legend-item"><span class="marker-dot nature"></span> Nature</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Local Recommendations -->
+            <div class="ce-recommendations-layout">
+                <div class="ce-recommendations-main">
+                    <div class="ce-section-title">
+                        <h3 data-i18n="ce_locals_recommend">🗣️ What Locals Recommend</h3>
+                    </div>
+                    <div class="ce-recommendations-feed" id="ce-recommendations-feed">
+                        <!-- Feed populated by JS -->
+                    </div>
+                </div>
+                <div class="ce-recommendations-sidebar">
+                    <div class="ce-form-card">
+                        <h3 data-i18n="ce_share_tip_title">Share Your Local Tip</h3>
+                        <form id="local-tip-form">
+                            <div class="form-group">
+                                <label for="tip-title">Title</label>
+                                <input type="text" id="tip-title" required placeholder="e.g., Hidden Ramen Spot">
+                            </div>
+                            <div class="form-group">
+                                <label for="tip-place">Place Name</label>
+                                <input type="text" id="tip-place" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="tip-category">Category</label>
+                                <select id="tip-category" required class="pref-select" style="width: 100%;">
+                                    <option value="Food">Food</option>
+                                    <option value="Hidden Gem">Hidden Gem</option>
+                                    <option value="Culture">Culture</option>
+                                    <option value="Budget Tip">Budget Tip</option>
+                                    <option value="Safety Tip">Safety Tip</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="tip-desc">Local Tip / Description</label>
+                                <textarea id="tip-desc" required rows="3"
+                                    placeholder="Why should travelers visit this place?"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="tip-author">Your Name (Optional)</label>
+                                <input type="text" id="tip-author" placeholder="e.g., Local Explorer">
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;"
+                                data-i18n="btn_submit_rec">Submit Recommendation</button>
+                        </form>
+                    </div>
+
+                    <div class="ce-trust-card">
+                        <h4>Community Trust & Safety</h4>
+                        <p>Recommendations are community-submitted and locally stored for this demo. Always verify
+                            important information such as opening hours and prices before visiting.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Wanderlog Style: Where to Eat & Explore Section -->
+        <section id="wanderguide-view" class="view-section wanderguide-section hidden">
+            <!-- Top Action Nav -->
+            <div class="wg-top-bar">
+                <button id="wg-btn-back" class="btn btn-small btn-outline" data-i18n="wg_back_planner">&larr; Back to
+                    Trip Planner</button>
+                <div class="wg-quick-chips">
+                    <span class="wg-quick-label" data-i18n="wg_popular_guides">Popular Food Cities:</span>
+                    <button class="wg-chip" data-city="Lucknow">Lucknow</button>
+                    <button class="wg-chip" data-city="Delhi">Delhi</button>
+                    <button class="wg-chip" data-city="Mumbai">Mumbai</button>
+                    <button class="wg-chip" data-city="Jaipur">Jaipur</button>
+                    <button class="wg-chip" data-city="Hyderabad">Hyderabad</button>
+                    <button class="wg-chip" data-city="Kolkata">Kolkata</button>
+                    <button class="wg-chip" data-city="Amritsar">Amritsar</button>
+                    <button class="wg-chip" data-city="Udaipur">Udaipur</button>
+                    <button class="wg-chip" data-city="Greater Noida">Greater Noida</button>
+                </div>
+            </div>
+
+            <!-- Hero Banner -->
+            <div class="wg-hero-banner" id="wg-hero-banner">
+                <div class="wg-hero-overlay"></div>
+                <div class="wg-hero-content">
+                    <nav class="wg-breadcrumbs" aria-label="Breadcrumb">
+                        <span id="wg-breadcrumb-city">Lucknow</span>
+                        <span class="wg-bc-sep">&rsaquo;</span>
+                        <span class="wg-bc-active" data-i18n="nav_wanderguide">Where to eat & explore</span>
+                    </nav>
+                    <h1 class="wg-hero-title">Where to eat: famous local restaurants & culinary spots in <span
+                            id="wg-heading-city">Lucknow</span></h1>
+                    <p class="wg-hero-subtitle" data-i18n="wg_hero_sub">
+                        Explore authentic local eateries, legendary dhabas, sweet shops, and regional culinary gems across India.
+                    </p>
+
+                    <!-- Search Bar in Hero -->
+                    <div class="wg-search-wrapper">
+                        <div class="wg-search-box">
+                            <span class="wg-search-icon">🔍</span>
+                            <input type="text" id="wg-city-search-input"
+                                placeholder="Enter any city across India (e.g. Lucknow, Delhi, Mumbai, Jaipur, Hyderabad)..."
+                                data-i18n-placeholder="wg_search_placeholder" autocomplete="off">
+                            <button id="wg-btn-search" class="wg-btn-search" data-i18n="wg_btn_search">Search
+                                City</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sticky Category Filter Bar -->
+            <div class="wg-filter-bar">
+                <div class="wg-filter-scroll">
+                    <button class="wg-filter-pill active" data-filter="all"><span data-i18n="wg_filter_all">🍽️ All
+                            Places</span> (<span id="wg-pill-count-all">0</span>)</button>
+                    <button class="wg-filter-pill" data-filter="restaurant" data-i18n="wg_filter_restaurants">🥘 Best
+                        Restaurants</button>
+                    <button class="wg-filter-pill" data-filter="cafe" data-i18n="wg_filter_cafes">🍰 Cafes &
+                        Bakeries</button>
+                    <button class="wg-filter-pill" data-filter="finedining" data-i18n="wg_filter_finedining">🍝 Fine
+                        Dining</button>
+                    <button class="wg-filter-pill" data-filter="dhaba" data-i18n="wg_filter_dhaba">🍛 Local Food &
+                        Dhabas</button>
+                    <button class="wg-filter-pill" data-filter="bar" data-i18n="wg_filter_bars">🍸 Bars &
+                        Lounges</button>
+                </div>
+                <div class="wg-filter-actions">
+                    <button id="wg-btn-fit-map" class="btn btn-small btn-outline"
+                        title="Fit all place markers on map">📍 Zoom into places</button>
+                    <button id="wg-mobile-map-toggle" class="btn btn-small wg-mobile-toggle-btn">🗺️ Show Map</button>
+                </div>
+            </div>
+
+            <!-- Split View: Places List (Left) & Sticky Map (Right) -->
+            <div class="wg-split-container">
+                <!-- Left Column: Places List -->
+                <div class="wg-list-column" id="wg-list-column">
+                    <div class="wg-list-header">
+                        <div class="wg-list-stats">
+                            <h2 class="wg-list-title"><span id="wg-display-count">12</span> places collected</h2>
+                            <span class="wg-list-curated-badge">✨ Curated Editorial Guide</span>
+                        </div>
+                        <div class="wg-list-sort">
+                            <label for="wg-sort-select" data-i18n="wg_sort_label">Sort by:</label>
+                            <select id="wg-sort-select">
+                                <option value="curated" data-i18n="wg_sort_curated">Curated Ranking</option>
+                                <option value="rating" data-i18n="wg_sort_rating">Highest Rated</option>
+                                <option value="reviews" data-i18n="wg_sort_reviews">Most Reviews</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- General Photo & Content Disclaimer -->
+                    <div class="wg-photo-disclaimer">
+                        <span class="wg-disclaimer-icon">ℹ️</span>
+                        <span><strong>Disclaimer:</strong> Photos shown for dining venues and places are illustrative and representative. Images may not reflect the exact current appearance of the location.</span>
+                    </div>
+
+                    <!-- AI Loader State -->
+                    <div id="wg-loading-state" class="wg-loading-state hidden">
+                        <div class="wg-spinner"></div>
+                        <h3 id="wg-loading-title">Gathering authentic places in Mumbai...</h3>
+                        <p id="wg-loading-subtitle">Querying Groq AI and geocoding coordinates with OpenStreetMap...</p>
+                    </div>
+
+                    <!-- Error / Empty State -->
+                    <div id="wg-empty-state" class="wg-empty-state hidden">
+                        <div class="wg-empty-icon">📍</div>
+                        <h3>No places found</h3>
+                        <p>Try searching another city or adjusting the category filter.</p>
+                    </div>
+
+                    <!-- Cards Container -->
+                    <div class="wg-cards-container" id="wg-cards-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Sticky Interactive Leaflet Map -->
+                <div class="wg-map-column" id="wg-map-column">
+                    <div class="wg-map-wrapper">
+                        <div id="wg-leaflet-map" class="wg-leaflet-map"></div>
+
+                        <!-- Map Floating Legend & Controls -->
+                        <div class="wg-map-controls-overlay">
+                            <div class="wg-map-pill-badge">
+                                <span class="wg-pin-dot"></span> <span id="wg-map-active-count">12 places on map</span>
+                            </div>
+                            <button id="wg-map-recenter" class="wg-map-icon-btn" title="Recenter Map">🎯</button>
+                        </div>
+
+                        <!-- Map Card Popup / Preview (Floating bottom sheet) -->
+                        <div id="wg-map-card-preview" class="wg-map-card-preview hidden">
+                            <button id="wg-close-preview" class="wg-preview-close">&times;</button>
+                            <div class="wg-preview-body">
+                                <img id="wg-prev-img" src="" alt="Place photo" class="wg-prev-img">
+                                <div class="wg-prev-info">
+                                    <div class="wg-prev-meta">
+                                        <span id="wg-prev-num" class="wg-pin-number">1</span>
+                                        <span id="wg-prev-cat" class="wg-tag">Cafe</span>
+                                        <span id="wg-prev-rating" class="wg-rating-star">⭐ 4.6</span>
+                                    </div>
+                                    <h4 id="wg-prev-title" class="wg-prev-title">Creme Castle</h4>
+                                    <p id="wg-prev-desc" class="wg-prev-desc"></p>
+                                    <div class="wg-prev-actions">
+                                        <button id="wg-prev-scroll-btn" class="btn btn-small btn-outline">View in
+                                            List</button>
+                                        <button id="wg-prev-add-btn" class="btn btn-small btn-primary">+ Add to
+                                            Trip</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Route & Budget Feasibility Optimizer View -->
+        <section id="route-optimizer-view" class="view-section route-optimizer-section hidden">
+            <div class="bro-view-container">
+                <div class="bro-header-banner">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <h1 class="bro-banner-title">Route &amp; Budget Optimizer</h1>
+                            <p class="bro-banner-desc">
+                                Minimum Travel Budget Feasibility + Best Feasible Route Optimization. Evaluate real
+                                distances, round-trip travel costs, toll expenses, and select the optimal route for your
+                                budget.
+                            </p>
+                        </div>
+                        <button type="button" id="bro-btn-back-to-planner" class="btn btn-outline btn-small">&larr; Back
+                            to Trip Planner</button>
+                    </div>
+                </div>
+
+                <!-- Test Presets Bar -->
+                <div class="bro-presets-bar">
+                    <span class="bro-preset-label">Instant Benchmarks:</span>
+                    <button type="button" class="bro-preset-btn" id="preset-delhi-rishikesh-1000">
+                        <span>🚗 Delhi &rarr; Rishikesh (₹1,000 Budget)</span>
+                    </button>
+                    <button type="button" class="bro-preset-btn infeasible" id="preset-delhi-rishikesh-800">
+                        <span>⚠️ Delhi &rarr; Rishikesh (₹800 - Infeasible Test)</span>
+                    </button>
+                    <button type="button" class="bro-preset-btn" id="preset-delhi-rishikesh-1500">
+                        <span>⭐ Delhi &rarr; Rishikesh (₹1,500 - Best Route)</span>
+                    </button>
+                    <button type="button" class="bro-preset-btn" id="preset-mumbai-pune">
+                        <span>🏙️ Mumbai &rarr; Pune</span>
+                    </button>
+                    <button type="button" class="bro-preset-btn" id="preset-bangalore-mysore">
+                        <span>🌿 Bengaluru &rarr; Mysuru</span>
+                    </button>
+                </div>
+
+                <!-- Input Controls -->
+                <div class="bro-input-grid">
+                    <div class="bro-form-group">
+                        <label for="bro-input-origin">Starting Location (Origin)</label>
+                        <input type="text" id="bro-input-origin" placeholder="e.g. Delhi" value="Delhi">
+                    </div>
+                    <div class="bro-form-group">
+                        <label for="bro-input-dest">Destination</label>
+                        <input type="text" id="bro-input-dest" placeholder="e.g. Destination" value="">
+                    </div>
+                    <div class="bro-form-group">
+                        <label for="bro-input-budget">Travel Budget (₹)</label>
+                        <input type="number" id="bro-input-budget" placeholder="e.g. 1000" value="1000">
+                    </div>
+                    <div class="bro-form-group">
+                        <label for="bro-select-mode">Travel Mode</label>
+                        <select id="bro-select-mode">
+                            <option value="car" selected>🚗 Car / Cab (Fuel + Tolls)</option>
+                            <option value="bus">🚌 Bus (Public Transit)</option>
+                            <option value="train">🚆 Train (Railways)</option>
+                            <option value="bike">🏍️ Motorcycle (Economy)</option>
+                            <option value="flight">✈️ Flight (Air Route)</option>
+                        </select>
+                    </div>
+                    <div class="bro-form-group"
+                        style="grid-column: 1 / -1; display: flex; flex-direction: row; justify-content: flex-end; gap: 12px;">
+                        <button type="button" class="bro-btn-run" id="bro-btn-calculate">
+                            <span>⚡ Calculate Route Alternatives &amp; Feasibility</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dynamic Results Output -->
+                <div id="bro-results-container">
+                    <div class="bro-empty-card">
+                        <p>Click <strong>"Calculate Route Alternatives &amp; Feasibility"</strong> or pick one of the
+                            benchmark buttons above to compare routes and verify your budget.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="i18n.js"></script>
+    <script src="js/budgetRouteOptimizer.js"></script>
+    <script src="auth.js"></script>
+    <script src="planner.js"></script>
+</body>
+
+</html>

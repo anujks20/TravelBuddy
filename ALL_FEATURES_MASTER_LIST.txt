@@ -1,0 +1,297 @@
+================================================================================
+                    TRAVELBUDDY: COMPLETE MASTER FEATURES LIST
+================================================================================
+A pure, exhaustive, point-to-point list of every single feature across all apps,
+portals, services, and hardware in the TravelBuddy platform.
+
+================================================================================
+1. MOBILE APPLICATION (FLUTTER / ANDROID & iOS) - ALL FEATURES
+================================================================================
+
+A. Emergency & Safety Features:
+   - One-Touch Big Red SOS Emergency Button on Home screen.
+   - Long-press confirmation protection on SOS button to prevent accidental clicks.
+   - Instant GPS Coordinate Transmission (Latitude, Longitude, Altitude, Accuracy) upon SOS trigger.
+   - Emergency Battery Level Reporting sent with SOS alerts.
+   - Emergency Incident Type Selection (General Emergency, Medical Crisis, Crime/Harassment, Accident).
+   - SOS Status Banner showing live response status (Active, Acknowledged, Dispatched, Resolved).
+   - Emergency Contacts Management (Add, Edit, Delete, View).
+   - Priority Ordering for Emergency Contacts (Priority 1 to 5).
+   - Direct Phone Dialing to emergency contacts directly from the app.
+   - Direct SMS Dispatch to emergency contacts with single-tap pre-filled distress message.
+
+B. Geo-Fencing & Danger Zone Features:
+   - Real-time Danger Zone Distance Tracking (continuous background calculations).
+   - In-App Restricted Danger Zone Radar displaying nearest danger zones and proximity meters.
+   - Audible Warning Siren Generator: Synthesized high-volume dual-tone alarm plays automatically on danger zone breach.
+   - Full-Screen Urgent Red Alert Modal popup upon entering any restricted zone.
+   - Threat Level Badges displayed on zones (Critical, High, Moderate, Restricted Military).
+   - Danger Warning Advice displayed (e.g., "Rapids current too high - turn back immediately").
+   - "Silence Siren & Acknowledge Warning" button on alert modal.
+
+C. Interactive Map Features:
+   - Full-screen Interactive Vector Map powered by OpenStreetMap / FlutterMap.
+   - Red Translucent Circular Overlay Polygons marking restricted danger perimeters.
+   - Live Tourist GPS Location Marker with blue pulsating dot.
+   - Direction / Heading Compass Indicator on user marker.
+   - Tap-to-Inspect Danger Zone: Shows zone name, danger radius in meters, and threat description.
+   - Center-on-Me button to instantly snap camera to current location.
+   - Zoom In / Zoom Out and Rotation gesture controls.
+
+D. IoT Wearable Sensor Integration Features:
+   - Live 6-Axis Motion Sensor Dashboard (Accelerometer Ax, Ay, Az + Gyroscope Gx, Gy, Gz).
+   - Total G-Force Acceleration Metric ($A = \sqrt{Ax^2 + Ay^2 + Az^2}$).
+   - 3D Orientation Level Gauges displaying real-time Pitch and Roll angles in degrees.
+   - Real-Time Fall & Freefall Detection Alert Indicator.
+   - Violent Impact Detection Indicator (> 2.80g threshold).
+   - Wearable Node Battery Level Indicator.
+   - Wearable Connection Status Badge (Connected / Disconnected / Syncing).
+   - Built-in Fall Simulator Button for testing emergency workflows without physical hardware.
+
+E. AI Trip & Itinerary Features:
+   - Complete Trips Listing (Upcoming, Ongoing, Completed trips).
+   - Expandable Day-by-Day Itinerary Viewer.
+   - Granular Activity Timeline: Start time, end time, place name, activity summary.
+   - Estimated Activity Cost Display in selected currency (INR, USD, EUR, GBP).
+   - Transit Time and Recommended Travel Mode between itinerary stops.
+   - Interactive Navigation Pin for each itinerary activity.
+   - Trip Notes and Packing Checklist.
+
+F. Hotel Stay & Digital Check-In Features:
+   - Digital Hotel Stay Pass with hotel name, room number, check-in & check-out dates.
+   - Stay Status Badge (Reserved, Checked In, Checked Out).
+   - Unique Tourist Digital Identity Card with auto-generated Tourist UID (e.g., TB-IND-2026-A1B2).
+   - In-app QR Code generation for contact-free hotel reception scanning.
+   - Hotel Reception Direct Call button.
+   - Hotel Address & Directions launcher.
+   - Hotel Amenities Viewer (Wi-Fi, Pool, Safe, Medical Kit, Breakfast).
+
+G. Voice & Multilingual Translation Features:
+   - Real-Time Speech-to-Text (STT) Voice Input (Speak into phone mic).
+   - On-Device Neural Machine Translation (Google ML Kit).
+   - Text-to-Speech (TTS) vocalizer to speak translated phrases aloud to locals.
+   - Multi-Language Pair Selector (English, Hindi, Spanish, French, German, Japanese, etc.).
+   - Quick Emergency Phrases Library (Medical help, Police, Lost passport, Directions).
+
+H. Tourist Profile & Medical Identity Features:
+   - Tourist Digital ID Card with nationality and photo placeholder.
+   - Blood Group recording and display.
+   - Chronic Medical Conditions & Allergies field (visible to emergency dispatchers).
+   - Dietary Restrictions field.
+   - Special Emergency Notes field for first responders.
+   - Account Details management (Name, Email, Phone Number).
+
+================================================================================
+2. POLICE EMERGENCY COMMAND DASHBOARD (REACT 19 / VITE) - ALL FEATURES
+================================================================================
+
+A. Tactical Emergency Radar & SOS Command Features:
+   - Live Emergency SOS Stream displaying all active tourist distress calls.
+   - Incident Urgency Sorting (prioritizes critical falls, zone breaches, and manual SOS).
+   - Tourist Details Card: Full Name, Tourist UID, Phone Number, Nationality.
+   - Victim Medical Dossier: Blood group, known allergies, chronic illnesses, emergency notes.
+   - Device Telemetry Status: Tourist phone battery level, GPS accuracy radius in meters.
+   - Incident Status Lifecycle Buttons:
+     * "Acknowledge Emergency"
+     * "Dispatch Patrol Unit"
+     * "Mark Incident Resolved"
+   - Timestamped Audit Trail Logger recording every status change and dispatch note.
+
+B. Tactical Threat Map Features:
+   - Full-Screen Tactical Dark Theme Map powered by Leaflet.
+   - Danger Zones displayed with bold red translucent circles and danger radius meters.
+   - Active Incident Markers pulsing in animated red rings at exact tourist coordinates.
+   - Victim Breadcrumb Trail: Visualizes victim's path of movement leading up to the incident.
+   - Patrol Unit Position Markers for response coordination.
+   - Interactive Tooltips on markers displaying tourist UID, time elapsed, and threat level.
+
+C. Real-Time Geofence Violations Monitor:
+   - Top-of-Screen Pulsating Red Alert Banner appearing when any tourist breaches a danger zone.
+   - Live Geofence Violations Feed table.
+   - Penetration Depth Metric: Shows exact meters tourist is inside the danger perimeter.
+   - Breach Duration Timer: Shows minutes/seconds elapsed since the perimeter was crossed.
+   - Tracking Device Source Tag: Distinguishes whether breach was reported by `PHONE_GPS` or `IOT_SENSOR_ESP32`.
+   - "Acknowledge Breach" and "Dispatch Patrol & Clear" one-click action buttons.
+
+D. Live IoT Wearable Sensor Telemetry Feed:
+   - Real-time tabular feed of ESP32 motion sensors worn by tourists.
+   - Accelerometer X/Y/Z, Gyroscope X/Y/Z metrics.
+   - Pitch and Roll tilt indicators.
+   - Visual Fall Detection Alarm Badge (`FALL DETECTED / VIOLENT IMPACT`).
+   - Battery health of tourist wearable nodes.
+
+E. Police Authentication & Station Settings:
+   - Officer Login with Badge Number, Station ID, and password.
+   - Officer Role Management (Officer, Dispatcher, Commander).
+
+================================================================================
+3. HOTEL PARTNER PORTAL (REACT 19 / VITE) - ALL FEATURES
+================================================================================
+
+A. Guest Verification Features:
+   - Instant Tourist UID Lookup Search Bar.
+   - Tourist Verification Card: Verifies tourist identity, photo, nationality, and contact phone.
+   - Emergency Medical Warning Tag (notifies hotel of guest medical conditions in case of room emergencies).
+   - Emergency Contacts Display for verified guests.
+
+B. Digital Check-In & Check-Out Engine:
+   - One-Click Digital Guest Check-In:
+     * Assigns room number.
+     * Sets check-in timestamp.
+     * Automatically updates tourist mobile app stay status to "CHECKED IN".
+   - One-Click Digital Guest Check-Out:
+     * Records check-out timestamp.
+     * Frees room and marks stay as "CHECKED OUT".
+   - Special Requests / Notes logging for room service or medical needs.
+
+C. Active Guest Safety & Stay Roster:
+   - Live Tabular Roster of all tourists currently residing in the hotel.
+   - Filter stays by status (Reserved, Checked In, Checked Out).
+   - Search stays by guest name, room number, or Tourist UID.
+   - Quick Call / Message Guest action triggers.
+
+D. Hotel Amenities & Safety Management:
+   - Amenities Toggle Manager (Wi-Fi, 24/7 Security, First Aid, Swimming Pool, Dining).
+   - Hotel Emergency Contact Numbers configurator.
+   - Hotel GPS Coordinates & Address verification.
+
+================================================================================
+4. TOURIST WEB CLIENT - ALL FEATURES
+================================================================================
+
+A. AI Trip Planner & Itinerary Visualizer:
+   - Interactive Trip Builder Wizard (Destination, Start Date, End Date, Budget Tier).
+   - Travel Style Selection (Backpacker, Cultural, Adventure, Luxury, Family).
+   - Automated Multi-Day Itinerary Generation (Groq Llama-3 AI Engine).
+   - Day-by-Day Visualizer with time slots, attraction descriptions, and estimated expenses.
+   - Daily & Total Budget Summary Bar with currency conversion.
+   - Interactive AI Trip Copilot Assistant for on-the-fly itinerary alterations.
+
+B. Multi-Stop Budget & Route Optimizer (TSP Solver):
+   - Multi-Stop Waypoint Input (Add multiple attractions/stops for any day).
+   - Traveling Salesperson Problem (TSP) Optimization Algorithm (OSRM Routing Engine).
+   - Optimal Visiting Sequence Reordering (minimizes total driving distance and time).
+   - Transit Mode Cost Estimator (Fuel/Walking/Taxi costs calculated automatically).
+   - Before vs. After Route Comparison (shows distance and time saved).
+
+C. City Explorer (Live Destination & POI Discovery Engine):
+   - Real-World Landmark & POI Discovery powered by live OpenStreetMap Overpass queries.
+   - Real-Time City Autocomplete & Search with debounced multi-destination lookup.
+   - Evidence-Based Prominence Scoring Algorithm: Ranks genuine tourist landmarks over commercial clutter.
+   - Strict Anti-Noise & Anti-Hallucination Filtering:
+     * Strictly excludes private homes, personal residences, and fake or unverified venues.
+     * Strictly excludes generic marriage halls, banquet gardens, and commercial caterers.
+     * Strictly excludes generic public parks, municipal gardens, and local flats/apartments.
+     * Excludes mismatched Wikipedia biographical portrait photos (e.g., historical/living figures on venues).
+   - Multi-Source Authentic Photography Pipeline:
+     * Live Wikimedia Commons / Wikipedia photo resolution for authentic attraction imagery.
+     * Dynamic fallback to curated architectural/heritage visuals (no generic Taj Mahal placeholders for non-Agra places).
+   - Contextual Photo Attribution & Provenance Disclaimer:
+     * Transparent site-wide disclaimer ("Photos shown are illustrative or community-sourced from OpenStreetMap & Wikipedia").
+   - Interactive Leaflet Destination Map:
+     * Custom thematic pins by category (Heritage, Nature, Temple, Adventure, Cultural).
+     * Single-click "Add to Itinerary" and "Get Directions".
+   - Cache Management System:
+     * Immediate server cache invalidation endpoint (`/api/places/clear-cache`).
+     * Browser session storage purge ensuring fresh real-time city data across all searches.
+
+D. Where to Eat & Explore (WanderGuide Dining & Cultural Discovery):
+   - Comprehensive culinary and local attraction discovery engine.
+   - Categorized directory: Cafes, Fine Dining, Street Food, and Hidden Cultural spots.
+   - Split-view Interactive Map and Card Grid with mobile drawer toggle support.
+   - Saved Places Collection: Bookmark favorite eateries and spots with persistent storage.
+   - Direct navigation launchers and operating hours indicators.
+
+E. IoT Destination Monitor & Real-Time Telemetry:
+   - Live Destination IoT Sensor stream monitoring ambient temperature, crowd density, air quality index (AQI), and weather.
+   - Telemetry status gauges and threshold alert indicators for tourist safety.
+
+F. Safety Analysis & Danger Geofence Assessment:
+   - Live destination risk scoring and safety index calculation.
+   - Interactive Danger Zone Overlays marking high-risk, steep cliff, or rapid current sectors.
+   - Threat Warning Popups on zone click displaying threat severity and safety advisories.
+
+G. Responsive Navigation Bar Architecture & Adaptive UI:
+   - Fluid Responsive Header with layout containment preventing item merging at 100% zoom across all resolutions (1080p, 1366x768, 1440x900, 1536x864, 4K).
+   - Adaptive text shortening (`IoT Destination Monitor` -> `IoT Monitor`) and compact desktop tiers.
+   - Slide-out mobile drawer menu with seamless touch-friendly navigation on smaller screens.
+   - Cache-busting stylesheet integration for instant delivery of UI updates.
+
+H. Internationalization (i18n) & Localization:
+   - 13-Language Dynamic Translation Engine (English, Hindi, Marathi, Gujarati, Kannada, Tamil, Telugu, Bengali, French, German, Spanish, Italian, Japanese).
+   - Instant in-place DOM translation across all views, forms, modals, and navbar controls without page reloads.
+
+I. Tourist Authentication & Account Management:
+   - Modal-based User Registration and Login with JWT token lifecycle.
+   - Tourist Profile Pill (`👤 Tourist Name`) and Logout action in header.
+   - Password update management and tourist profile data persistence.
+   - Save Trips to Tourist Account and Export Itinerary as formatted PDF / Printable format.
+
+================================================================================
+5. IOT WEARABLE SENSOR HARDWARE (ESP32 + MPU6050) - ALL FEATURES
+================================================================================
+
+A. Motion Tracking & Kinematics:
+   - 6-Degrees-of-Freedom (6-DOF) continuous motion tracking.
+   - 3-Axis Accelerometer sampling at ±2g sensitivity.
+   - 3-Axis Gyroscope sampling at ±250°/s sensitivity.
+   - Total Acceleration Vector Calculation: $A = \sqrt{a_x^2 + a_y^2 + a_z^2}$.
+   - Pitch Angle calculation via trigonometric arctangent filter.
+   - Roll Angle calculation via trigonometric arctangent filter.
+
+B. Free-Fall & Violent Impact Anomaly Detection:
+   - Free-fall Phase Detection ($A < 0.35g$ sustained for $\ge 150\text{ms}$).
+   - High-G Crash & Impact Detection ($A > 2.80g$ sudden spike).
+   - Inactivity / Posture Fall Confirmation (verifies user remains down after impact).
+   - Automatic `is_fall_detected = true` flag generation.
+
+C. Edge Alarm & Telemetry Communication:
+   - Automated Periodic Wi-Fi HTTP POST Telemetry transmission to `/api/iot/telemetry`.
+   - Onboard Piezo Buzzer Warning Siren: Emits 2.4kHz audible alarm if backend returns geofence breach.
+   - Battery Level Monitoring via ADC voltage divider.
+
+================================================================================
+6. CENTRAL BACKEND API & COMPUTATIONAL ENGINES - ALL FEATURES
+================================================================================
+
+A. Geofencing & Threat Calculation Engine:
+   - Spherical Haversine Perimeter Distance Formula calculating distance in meters.
+   - Continuous Location Ingestion & Breach Evaluation.
+   - Penetration Depth & Distance-from-Center calculation.
+   - Multi-Device Breach Logging (identifies breach from phone GPS or IoT node).
+
+B. AI & Optimization Engines:
+   - Groq Llama-3 AI Engine for structured travel itinerary generation.
+   - OSRM Distance Matrix & 2-Opt Local Search TSP Route Optimizer.
+   - OpenStreetMap Nominatim & Overpass Geocoding / POI Search Gateway.
+
+C. Real-World Places & Discovery Engine (`/api/places/*`):
+   - `POST /api/places/city`: Overpass API POI harvesting with dual candidate queries, OSM tag analysis, and Wikipedia image resolution.
+   - `GET /api/places/autocomplete`: High-speed Nominatim debounced location suggestions.
+   - `POST /api/places/clear-cache` & `ALL /api/places/clear-cache`: Instant cache invalidation for updated real-time place records.
+   - Strict Eligibility & Anti-Hallucination Pipeline filtering out personal homes, fake venues, and biography portrait mismatches.
+
+D. Security, Role-Based Access & Data Integrity:
+   - Multi-Role JWT Bearer Authentication (Tourists, Police Officers, Hotel Staff).
+   - Unique Tourist UID Auto-Generation Algorithm (e.g., `TB-IND-2026-XXXX`).
+   - Bcrypt Password Hashing (10 rounds).
+   - Global & Endpoint Rate Limiting against flooding attacks.
+   - Helmet Security Headers & Dynamic CORS whitelist.
+   - Immutable Audit Logging for security and emergency dispatch actions.
+
+================================================================================
+7. WHATSAPP BOT (META CLOUD GRAPH API) - ALL FEATURES
+================================================================================
+
+A. Conversational Tourism & Safety Commands:
+   - Emergency "SOS" / "Help" Command: Triggers emergency protocol and returns immediate safety guidance.
+   - "Itinerary" Query: Retrieves and formats the tourist's current active trip schedule into a clean chat message.
+   - "Attractions" / Nearby Search: Accepts WhatsApp live location pin and returns top nearby safe tourist attractions.
+
+B. Message Integrity & Infrastructure:
+   - Meta Webhook Signature Verification (`hub.verify_token` & `hub.challenge`).
+   - Webhook Idempotency Deduplication Engine (`processed_messages` store prevents duplicate bot replies).
+
+================================================================================
+EOF - TravelBuddy Master Features List
+================================================================================

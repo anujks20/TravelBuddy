@@ -1,0 +1,15 @@
+#ifndef IOT_CONFIG_H
+#define IOT_CONFIG_H
+
+// TravelBuddy IoT Node Local Configuration Template
+// Copy this file to config.h and fill in your actual credentials.
+// config.h is ignored by git and will NOT be committed.
+
+const char* WIFI_SSID     = "YOUR_WIFI_SSID";
+const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
+const char* SERVER_URL    = "http://<YOUR_BACKEND_LAN_IP>:5000/api/iot/telemetry";
+const char* DEVICE_ID     = "ESP32-MPU6050-NODE-01";
+const char* DEVICE_KEY    = "tb_iot_esp32_sec_2026";
+const char* USER_ID       = NULL;
+
+#endif
