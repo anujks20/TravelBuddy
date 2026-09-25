@@ -13,6 +13,9 @@ app.use(express.json({ limit: '5mb' }));
 
 // Serve static files from current directory
 app.use(express.static(__dirname));
+if (process.cwd() !== __dirname) {
+    app.use(express.static(process.cwd()));
+}
 
 // Routes
 app.use('/api', apiRoutes);
@@ -20,8 +23,8 @@ app.use('/webhook', webhookRoutes);
 
 // Fallback to index.html for single page app experience if needed
 app.use((req, res) => {
-    // Only fallback for GET requests that are non-API and non-webhook routes
-    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/webhook')) {
+    // Only fallback for GET requests that are non-API, non-webhook, and non-asset routes
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/webhook') && !path.extname(req.path)) {
         res.sendFile(path.join(__dirname, 'index.html'));
     } else {
         res.status(404).json({ error: 'Not Found' });
