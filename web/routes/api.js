@@ -588,5 +588,35 @@ router.all("/places/clear-cache", async (req, res) => {
     }
 });
 
+// ---------------------------------------------------------
+// GET /geofence/zones (Safety / Danger Zones proxy)
+// ---------------------------------------------------------
+router.get("/geofence/zones", async (req, res) => {
+    try {
+        const response = await axios.get(
+            `${BACKEND_URL}/api/geofence/zones`,
+            {
+                headers: backendHeaders(req),
+                timeout: 10000
+            }
+        );
+
+        return res.status(response.status).json(response.data);
+    } catch (error) {
+        if (error.response) {
+            return res
+                .status(error.response.status)
+                .json(error.response.data);
+        }
+
+        console.error("Website geofence zones proxy error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to load geofence zones."
+        });
+    }
+});
+
 module.exports = router;
 
