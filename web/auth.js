@@ -57,6 +57,805 @@
         return !!getToken();
     }
 
+    const COUNTRIES = [
+            {
+                    "name": "Afghanistan",
+                    "code": "AFG"
+            },
+            {
+                    "name": "Albania",
+                    "code": "ALB"
+            },
+            {
+                    "name": "Algeria",
+                    "code": "DZA"
+            },
+            {
+                    "name": "Andorra",
+                    "code": "AND"
+            },
+            {
+                    "name": "Angola",
+                    "code": "AGO"
+            },
+            {
+                    "name": "Antigua and Barbuda",
+                    "code": "ATG"
+            },
+            {
+                    "name": "Argentina",
+                    "code": "ARG"
+            },
+            {
+                    "name": "Armenia",
+                    "code": "ARM"
+            },
+            {
+                    "name": "Australia",
+                    "code": "AUS"
+            },
+            {
+                    "name": "Austria",
+                    "code": "AUT"
+            },
+            {
+                    "name": "Azerbaijan",
+                    "code": "AZE"
+            },
+            {
+                    "name": "Bahamas",
+                    "code": "BHS"
+            },
+            {
+                    "name": "Bahrain",
+                    "code": "BHR"
+            },
+            {
+                    "name": "Bangladesh",
+                    "code": "BGD"
+            },
+            {
+                    "name": "Barbados",
+                    "code": "BRB"
+            },
+            {
+                    "name": "Belarus",
+                    "code": "BLR"
+            },
+            {
+                    "name": "Belgium",
+                    "code": "BEL"
+            },
+            {
+                    "name": "Belize",
+                    "code": "BLZ"
+            },
+            {
+                    "name": "Benin",
+                    "code": "BEN"
+            },
+            {
+                    "name": "Bhutan",
+                    "code": "BTN"
+            },
+            {
+                    "name": "Bolivia",
+                    "code": "BOL"
+            },
+            {
+                    "name": "Bosnia and Herzegovina",
+                    "code": "BIH"
+            },
+            {
+                    "name": "Botswana",
+                    "code": "BWA"
+            },
+            {
+                    "name": "Brazil",
+                    "code": "BRA"
+            },
+            {
+                    "name": "Brunei",
+                    "code": "BRN"
+            },
+            {
+                    "name": "Bulgaria",
+                    "code": "BGR"
+            },
+            {
+                    "name": "Burkina Faso",
+                    "code": "BFA"
+            },
+            {
+                    "name": "Burundi",
+                    "code": "BDI"
+            },
+            {
+                    "name": "Cabo Verde",
+                    "code": "CPV"
+            },
+            {
+                    "name": "Cambodia",
+                    "code": "KHM"
+            },
+            {
+                    "name": "Cameroon",
+                    "code": "CMR"
+            },
+            {
+                    "name": "Canada",
+                    "code": "CAN"
+            },
+            {
+                    "name": "Central African Republic",
+                    "code": "CAF"
+            },
+            {
+                    "name": "Chad",
+                    "code": "TCD"
+            },
+            {
+                    "name": "Chile",
+                    "code": "CHL"
+            },
+            {
+                    "name": "China",
+                    "code": "CHN"
+            },
+            {
+                    "name": "Colombia",
+                    "code": "COL"
+            },
+            {
+                    "name": "Comoros",
+                    "code": "COM"
+            },
+            {
+                    "name": "Congo",
+                    "code": "COG"
+            },
+            {
+                    "name": "Congo (Democratic Republic)",
+                    "code": "COD"
+            },
+            {
+                    "name": "Costa Rica",
+                    "code": "CRI"
+            },
+            {
+                    "name": "Croatia",
+                    "code": "HRV"
+            },
+            {
+                    "name": "Cuba",
+                    "code": "CUB"
+            },
+            {
+                    "name": "Cyprus",
+                    "code": "CYP"
+            },
+            {
+                    "name": "Czech Republic",
+                    "code": "CZE"
+            },
+            {
+                    "name": "Denmark",
+                    "code": "DNK"
+            },
+            {
+                    "name": "Djibouti",
+                    "code": "DJI"
+            },
+            {
+                    "name": "Dominica",
+                    "code": "DMA"
+            },
+            {
+                    "name": "Dominican Republic",
+                    "code": "DOM"
+            },
+            {
+                    "name": "Ecuador",
+                    "code": "ECU"
+            },
+            {
+                    "name": "Egypt",
+                    "code": "EGY"
+            },
+            {
+                    "name": "El Salvador",
+                    "code": "SLV"
+            },
+            {
+                    "name": "Equatorial Guinea",
+                    "code": "GNQ"
+            },
+            {
+                    "name": "Eritrea",
+                    "code": "ERI"
+            },
+            {
+                    "name": "Estonia",
+                    "code": "EST"
+            },
+            {
+                    "name": "Eswatini",
+                    "code": "SWZ"
+            },
+            {
+                    "name": "Ethiopia",
+                    "code": "ETH"
+            },
+            {
+                    "name": "Fiji",
+                    "code": "FJI"
+            },
+            {
+                    "name": "Finland",
+                    "code": "FIN"
+            },
+            {
+                    "name": "France",
+                    "code": "FRA"
+            },
+            {
+                    "name": "Gabon",
+                    "code": "GAB"
+            },
+            {
+                    "name": "Gambia",
+                    "code": "GMB"
+            },
+            {
+                    "name": "Georgia",
+                    "code": "GEO"
+            },
+            {
+                    "name": "Germany",
+                    "code": "DEU"
+            },
+            {
+                    "name": "Ghana",
+                    "code": "GHA"
+            },
+            {
+                    "name": "Greece",
+                    "code": "GRC"
+            },
+            {
+                    "name": "Grenada",
+                    "code": "GRD"
+            },
+            {
+                    "name": "Guatemala",
+                    "code": "GTM"
+            },
+            {
+                    "name": "Guinea",
+                    "code": "GIN"
+            },
+            {
+                    "name": "Guinea-Bissau",
+                    "code": "GNB"
+            },
+            {
+                    "name": "Guyana",
+                    "code": "GUY"
+            },
+            {
+                    "name": "Haiti",
+                    "code": "HTI"
+            },
+            {
+                    "name": "Honduras",
+                    "code": "HND"
+            },
+            {
+                    "name": "Hong Kong",
+                    "code": "HKG"
+            },
+            {
+                    "name": "Hungary",
+                    "code": "HUN"
+            },
+            {
+                    "name": "Iceland",
+                    "code": "ISL"
+            },
+            {
+                    "name": "India",
+                    "code": "IND"
+            },
+            {
+                    "name": "Indonesia",
+                    "code": "IDN"
+            },
+            {
+                    "name": "Iran",
+                    "code": "IRN"
+            },
+            {
+                    "name": "Iraq",
+                    "code": "IRQ"
+            },
+            {
+                    "name": "Ireland",
+                    "code": "IRL"
+            },
+            {
+                    "name": "Israel",
+                    "code": "ISR"
+            },
+            {
+                    "name": "Italy",
+                    "code": "ITA"
+            },
+            {
+                    "name": "Ivory Coast",
+                    "code": "CIV"
+            },
+            {
+                    "name": "Jamaica",
+                    "code": "JAM"
+            },
+            {
+                    "name": "Japan",
+                    "code": "JPN"
+            },
+            {
+                    "name": "Jordan",
+                    "code": "JOR"
+            },
+            {
+                    "name": "Kazakhstan",
+                    "code": "KAZ"
+            },
+            {
+                    "name": "Kenya",
+                    "code": "KEN"
+            },
+            {
+                    "name": "Kiribati",
+                    "code": "KIR"
+            },
+            {
+                    "name": "Korea (North)",
+                    "code": "PRK"
+            },
+            {
+                    "name": "Korea (South)",
+                    "code": "KOR"
+            },
+            {
+                    "name": "Kuwait",
+                    "code": "KWT"
+            },
+            {
+                    "name": "Kyrgyzstan",
+                    "code": "KGZ"
+            },
+            {
+                    "name": "Laos",
+                    "code": "LAO"
+            },
+            {
+                    "name": "Latvia",
+                    "code": "LVA"
+            },
+            {
+                    "name": "Lebanon",
+                    "code": "LBN"
+            },
+            {
+                    "name": "Lesotho",
+                    "code": "LSO"
+            },
+            {
+                    "name": "Liberia",
+                    "code": "LBR"
+            },
+            {
+                    "name": "Libya",
+                    "code": "LBY"
+            },
+            {
+                    "name": "Liechtenstein",
+                    "code": "LIE"
+            },
+            {
+                    "name": "Lithuania",
+                    "code": "LTU"
+            },
+            {
+                    "name": "Luxembourg",
+                    "code": "LUX"
+            },
+            {
+                    "name": "Macao",
+                    "code": "MAC"
+            },
+            {
+                    "name": "Madagascar",
+                    "code": "MDG"
+            },
+            {
+                    "name": "Malawi",
+                    "code": "MWI"
+            },
+            {
+                    "name": "Malaysia",
+                    "code": "MYS"
+            },
+            {
+                    "name": "Maldives",
+                    "code": "MDV"
+            },
+            {
+                    "name": "Mali",
+                    "code": "MLI"
+            },
+            {
+                    "name": "Malta",
+                    "code": "MLT"
+            },
+            {
+                    "name": "Marshall Islands",
+                    "code": "MHL"
+            },
+            {
+                    "name": "Mauritania",
+                    "code": "MRT"
+            },
+            {
+                    "name": "Mauritius",
+                    "code": "MUS"
+            },
+            {
+                    "name": "Mexico",
+                    "code": "MEX"
+            },
+            {
+                    "name": "Micronesia",
+                    "code": "FSM"
+            },
+            {
+                    "name": "Moldova",
+                    "code": "MDA"
+            },
+            {
+                    "name": "Monaco",
+                    "code": "MCO"
+            },
+            {
+                    "name": "Mongolia",
+                    "code": "MNG"
+            },
+            {
+                    "name": "Montenegro",
+                    "code": "MNE"
+            },
+            {
+                    "name": "Morocco",
+                    "code": "MAR"
+            },
+            {
+                    "name": "Mozambique",
+                    "code": "MOZ"
+            },
+            {
+                    "name": "Myanmar",
+                    "code": "MMR"
+            },
+            {
+                    "name": "Namibia",
+                    "code": "NAM"
+            },
+            {
+                    "name": "Nauru",
+                    "code": "NRU"
+            },
+            {
+                    "name": "Nepal",
+                    "code": "NPL"
+            },
+            {
+                    "name": "Netherlands",
+                    "code": "NLD"
+            },
+            {
+                    "name": "New Zealand",
+                    "code": "NZL"
+            },
+            {
+                    "name": "Nicaragua",
+                    "code": "NIC"
+            },
+            {
+                    "name": "Niger",
+                    "code": "NER"
+            },
+            {
+                    "name": "Nigeria",
+                    "code": "NGA"
+            },
+            {
+                    "name": "North Macedonia",
+                    "code": "MKD"
+            },
+            {
+                    "name": "Norway",
+                    "code": "NOR"
+            },
+            {
+                    "name": "Oman",
+                    "code": "OMN"
+            },
+            {
+                    "name": "Pakistan",
+                    "code": "PAK"
+            },
+            {
+                    "name": "Palau",
+                    "code": "PLW"
+            },
+            {
+                    "name": "Palestine",
+                    "code": "PSE"
+            },
+            {
+                    "name": "Panama",
+                    "code": "PAN"
+            },
+            {
+                    "name": "Papua New Guinea",
+                    "code": "PNG"
+            },
+            {
+                    "name": "Paraguay",
+                    "code": "PRY"
+            },
+            {
+                    "name": "Peru",
+                    "code": "PER"
+            },
+            {
+                    "name": "Philippines",
+                    "code": "PHL"
+            },
+            {
+                    "name": "Poland",
+                    "code": "POL"
+            },
+            {
+                    "name": "Portugal",
+                    "code": "PRT"
+            },
+            {
+                    "name": "Puerto Rico",
+                    "code": "PRI"
+            },
+            {
+                    "name": "Qatar",
+                    "code": "QAT"
+            },
+            {
+                    "name": "Romania",
+                    "code": "ROU"
+            },
+            {
+                    "name": "Russia",
+                    "code": "RUS"
+            },
+            {
+                    "name": "Rwanda",
+                    "code": "RWA"
+            },
+            {
+                    "name": "Saint Kitts and Nevis",
+                    "code": "KNA"
+            },
+            {
+                    "name": "Saint Lucia",
+                    "code": "LCA"
+            },
+            {
+                    "name": "Saint Vincent and the Grenadines",
+                    "code": "VCT"
+            },
+            {
+                    "name": "Samoa",
+                    "code": "WSM"
+            },
+            {
+                    "name": "San Marino",
+                    "code": "SMR"
+            },
+            {
+                    "name": "Sao Tome and Principe",
+                    "code": "STP"
+            },
+            {
+                    "name": "Saudi Arabia",
+                    "code": "SAU"
+            },
+            {
+                    "name": "Senegal",
+                    "code": "SEN"
+            },
+            {
+                    "name": "Serbia",
+                    "code": "SRB"
+            },
+            {
+                    "name": "Seychelles",
+                    "code": "SYC"
+            },
+            {
+                    "name": "Sierra Leone",
+                    "code": "SLE"
+            },
+            {
+                    "name": "Singapore",
+                    "code": "SGP"
+            },
+            {
+                    "name": "Slovakia",
+                    "code": "SVK"
+            },
+            {
+                    "name": "Slovenia",
+                    "code": "SVN"
+            },
+            {
+                    "name": "Solomon Islands",
+                    "code": "SLB"
+            },
+            {
+                    "name": "Somalia",
+                    "code": "SOM"
+            },
+            {
+                    "name": "South Africa",
+                    "code": "ZAF"
+            },
+            {
+                    "name": "South Sudan",
+                    "code": "SSD"
+            },
+            {
+                    "name": "Spain",
+                    "code": "ESP"
+            },
+            {
+                    "name": "Sri Lanka",
+                    "code": "LKA"
+            },
+            {
+                    "name": "Sudan",
+                    "code": "SDN"
+            },
+            {
+                    "name": "Suriname",
+                    "code": "SUR"
+            },
+            {
+                    "name": "Sweden",
+                    "code": "SWE"
+            },
+            {
+                    "name": "Switzerland",
+                    "code": "CHE"
+            },
+            {
+                    "name": "Syria",
+                    "code": "SYR"
+            },
+            {
+                    "name": "Taiwan",
+                    "code": "TWN"
+            },
+            {
+                    "name": "Tajikistan",
+                    "code": "TJK"
+            },
+            {
+                    "name": "Tanzania",
+                    "code": "TZA"
+            },
+            {
+                    "name": "Thailand",
+                    "code": "THA"
+            },
+            {
+                    "name": "Timor-Leste",
+                    "code": "TLS"
+            },
+            {
+                    "name": "Togo",
+                    "code": "TGO"
+            },
+            {
+                    "name": "Tonga",
+                    "code": "TON"
+            },
+            {
+                    "name": "Trinidad and Tobago",
+                    "code": "TTO"
+            },
+            {
+                    "name": "Tunisia",
+                    "code": "TUN"
+            },
+            {
+                    "name": "Turkey",
+                    "code": "TUR"
+            },
+            {
+                    "name": "Turkmenistan",
+                    "code": "TKM"
+            },
+            {
+                    "name": "Tuvalu",
+                    "code": "TUV"
+            },
+            {
+                    "name": "Uganda",
+                    "code": "UGA"
+            },
+            {
+                    "name": "Ukraine",
+                    "code": "UKR"
+            },
+            {
+                    "name": "United Arab Emirates",
+                    "code": "ARE"
+            },
+            {
+                    "name": "United Kingdom",
+                    "code": "GBR"
+            },
+            {
+                    "name": "United States",
+                    "code": "USA"
+            },
+            {
+                    "name": "Uruguay",
+                    "code": "URY"
+            },
+            {
+                    "name": "Uzbekistan",
+                    "code": "UZB"
+            },
+            {
+                    "name": "Vanuatu",
+                    "code": "VUT"
+            },
+            {
+                    "name": "Vatican City",
+                    "code": "VAT"
+            },
+            {
+                    "name": "Venezuela",
+                    "code": "VEN"
+            },
+            {
+                    "name": "Vietnam",
+                    "code": "VNM"
+            },
+            {
+                    "name": "Yemen",
+                    "code": "YEM"
+            },
+            {
+                    "name": "Zambia",
+                    "code": "ZMB"
+            },
+            {
+                    "name": "Zimbabwe",
+                    "code": "ZWE"
+            }
+    ];
+
     function showAuthModal(defaultMode = "login") {
         const existing =
             document.getElementById(
@@ -175,22 +974,95 @@
                                     border-radius:9px;
                                 ">
 
-                            <label style="display:block;margin:10px 0 5px;">
+                            <label style="display:block;margin:10px 0 5px;font-size:14px;font-weight:600;color:#334155;">
+                                Country
+                            </label>
+
+                            <div id="tb-country-selector-wrapper" style="position:relative;width:100%;">
+                                <button type="button" id="tb-country-trigger" aria-haspopup="listbox" aria-expanded="false" style="
+                                    width:100%;
+                                    box-sizing:border-box;
+                                    padding:12px 14px;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:9px;
+                                    background:#ffffff;
+                                    text-align:left;
+                                    font-family:inherit;
+                                    font-size:14px;
+                                    color:#0f172a;
+                                    cursor:pointer;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:space-between;
+                                    outline:none;
+                                ">
+                                    <span id="tb-selected-country-text" style="color:#64748b;">Select your country</span>
+                                    <span id="tb-country-arrow" style="font-size:11px;color:#64748b;margin-left:8px;transition:transform 0.2s;">▼</span>
+                                </button>
+
+                                <div id="tb-country-dropdown" role="listbox" style="
+                                    display:none;
+                                    position:absolute;
+                                    top:calc(100% + 5px);
+                                    left:0;
+                                    right:0;
+                                    background:#ffffff;
+                                    border:1px solid #cbd5e1;
+                                    border-radius:10px;
+                                    box-shadow:0 14px 35px rgba(15,23,42,0.18);
+                                    z-index:100000;
+                                    padding:8px;
+                                    box-sizing:border-box;
+                                ">
+                                    <div style="position:relative;margin-bottom:6px;">
+                                        <input type="text" id="tb-country-search" placeholder="🔍 Search country..." autocomplete="off" style="
+                                            width:100%;
+                                            box-sizing:border-box;
+                                            padding:9px 12px;
+                                            border:1px solid #cbd5e1;
+                                            border-radius:7px;
+                                            font-size:13.5px;
+                                            font-family:inherit;
+                                            outline:none;
+                                            background:#ffffff;
+                                            color:#0f172a;
+                                        ">
+                                    </div>
+                                    <div id="tb-country-list" style="
+                                        max-height:190px;
+                                        overflow-y:auto;
+                                        display:flex;
+                                        flex-direction:column;
+                                        gap:2px;
+                                    ">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <label style="display:block;margin:10px 0 5px;font-size:14px;font-weight:600;color:#334155;">
                                 Nationality Code
                             </label>
 
                             <input id="tb-nationality"
                                 type="text"
                                 maxlength="3"
-                                placeholder="IND"
+                                readonly
+                                tabindex="-1"
+                                placeholder="Auto-populated"
                                 style="
                                     width:100%;
                                     box-sizing:border-box;
-                                    padding:12px;
-                                    border:1px solid #ddd;
+                                    padding:12px 14px;
+                                    border:1px solid #cbd5e1;
                                     border-radius:9px;
+                                    background:#f1f5f9;
+                                    color:#334155;
+                                    font-weight:700;
+                                    letter-spacing:1.5px;
                                     text-transform:uppercase;
-                                ">
+                                    cursor:not-allowed;
+                                "
+                                title="Automatically populated from selected country">
 
                             <label style="display:block;margin:10px 0 5px;">
                                 Identity Type
@@ -397,7 +1269,125 @@
                 submitAuth
             );
 
+        initCountrySelector(modal);
         setMode(defaultMode);
+    }
+
+    function initCountrySelector(modal) {
+        const trigger = modal.querySelector("#tb-country-trigger");
+        const dropdown = modal.querySelector("#tb-country-dropdown");
+        const searchInput = modal.querySelector("#tb-country-search");
+        const countryList = modal.querySelector("#tb-country-list");
+        const countryText = modal.querySelector("#tb-selected-country-text");
+        const arrow = modal.querySelector("#tb-country-arrow");
+        const natInput = modal.querySelector("#tb-nationality");
+        const wrapper = modal.querySelector("#tb-country-selector-wrapper");
+
+        if (!trigger || !dropdown || !searchInput || !countryList || !natInput || !wrapper) return;
+
+        let selectedCountry = null;
+
+        function renderCountries(query = "") {
+            const q = query.trim().toLowerCase();
+            const filtered = COUNTRIES.filter(c =>
+                c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)
+            );
+
+            countryList.innerHTML = "";
+
+            if (filtered.length === 0) {
+                const empty = document.createElement("div");
+                empty.style.cssText = "padding:12px;text-align:center;color:#94a3b8;font-size:13px;";
+                empty.textContent = "No country found";
+                countryList.appendChild(empty);
+                return;
+            }
+
+            filtered.forEach(c => {
+                const item = document.createElement("div");
+                const isSelected = selectedCountry && selectedCountry.code === c.code;
+                item.className = "tb-country-item" + (isSelected ? " is-selected" : "");
+                item.innerHTML = `
+                    <span>${escapeHtml(c.name)}</span>
+                    <span class="tb-country-badge">${escapeHtml(c.code)}</span>
+                `;
+
+                item.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    selectCountry(c);
+                });
+
+                countryList.appendChild(item);
+            });
+        }
+
+        function selectCountry(c) {
+            selectedCountry = c;
+            countryText.textContent = c.name;
+            countryText.style.color = "#0f172a";
+            countryText.style.fontWeight = "600";
+            natInput.value = c.code;
+            closeDropdown();
+        }
+
+        function openDropdown() {
+            dropdown.style.display = "block";
+            trigger.classList.add("is-active");
+            trigger.setAttribute("aria-expanded", "true");
+            if (arrow) arrow.style.transform = "rotate(180deg)";
+            searchInput.value = "";
+            renderCountries("");
+            setTimeout(() => {
+                searchInput.focus();
+            }, 50);
+        }
+
+        function closeDropdown() {
+            dropdown.style.display = "none";
+            trigger.classList.remove("is-active");
+            trigger.setAttribute("aria-expanded", "false");
+            if (arrow) arrow.style.transform = "rotate(0deg)";
+        }
+
+        trigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            if (dropdown.style.display === "block") {
+                closeDropdown();
+            } else {
+                openDropdown();
+            }
+        });
+
+        searchInput.addEventListener("input", (e) => {
+            renderCountries(e.target.value);
+        });
+
+        searchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeDropdown();
+                trigger.focus();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                const firstItem = countryList.querySelector(".tb-country-item");
+                if (firstItem) {
+                    firstItem.click();
+                }
+            }
+        });
+
+        const onDocClick = (e) => {
+            if (!modal.isConnected) {
+                document.removeEventListener("click", onDocClick);
+                return;
+            }
+            if (!wrapper.contains(e.target)) {
+                closeDropdown();
+            }
+        };
+
+        document.addEventListener("click", onDocClick);
+
+        renderCountries("");
     }
 
     function setMode(mode) {
@@ -522,6 +1512,10 @@
                         )
                         .value.trim()
                         .toUpperCase();
+
+                if (!payload.nationalityCode) {
+                    throw new Error("Please select your country.");
+                }
 
                 payload.identityType =
                     document
