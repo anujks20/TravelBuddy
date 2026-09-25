@@ -6,7 +6,7 @@ class ApiConstants {
   // Physical device on same network -> http://YOUR_PC_IP:5000/api
   // Production -> https://YOUR_PUBLIC_DOMAIN/api
   static const String baseUrl =
-      'http://10.0.2.2:5000/api';
+      'https://travelbuddy-u83z.onrender.com/api';
 
   // Core
   static const String healthEndpoint =
@@ -76,5 +76,5 @@ class ApiConstants {
 
   // Web Portal / Planner
   static const String webPlannerUrl =
-      'http://10.0.2.2:3000/planner.html';
+      'https://travelbuddy-web-iota.vercel.app/planner.html';
 }
