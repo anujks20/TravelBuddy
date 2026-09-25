@@ -31,7 +31,8 @@ TravelBuddy is deployed across production environments:
 The Android mobile application is distributed as a standalone APK for SIH 2026 evaluation.
 
 - **APK Name:** `TravelBuddy-v1.0.0.apk`
-- **Download:** Available under the [GitHub Releases](https://github.com/anujks20/TravelBuddy/releases) page.
+- **GitHub Release:** [v1.0.0](https://github.com/anujks20/TravelBuddy/releases/tag/v1.0.0)
+- **Direct Download:** [Download TravelBuddy-v1.0.0.apk](https://github.com/anujks20/TravelBuddy/releases/download/v1.0.0/TravelBuddy-v1.0.0.apk)
 
 The mobile app connects directly to the production backend on Render and provides tourists with real-time location monitoring, geofence danger perimeter alarms, one-tap SOS triggering, and emergency contact syncing.
 
@@ -160,8 +161,8 @@ Pre-configured evaluation accounts for judges and evaluators:
 
 The standalone Android release APK can be downloaded directly from the GitHub repository:
 
-- Go to [GitHub Releases](https://github.com/anujks20/TravelBuddy/releases).
-- Download `TravelBuddy-v1.0.0.apk` from the **v1.0.0** release assets.
+- **Release Page:** [GitHub Release v1.0.0](https://github.com/anujks20/TravelBuddy/releases/tag/v1.0.0)
+- **Direct APK Download:** [TravelBuddy-v1.0.0.apk](https://github.com/anujks20/TravelBuddy/releases/download/v1.0.0/TravelBuddy-v1.0.0.apk)
 - Install on any Android device (supports Android 8.0+ / API level 26+).
 
 ---
